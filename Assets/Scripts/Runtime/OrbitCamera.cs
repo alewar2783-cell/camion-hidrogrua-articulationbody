@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 namespace Truck
@@ -20,6 +21,8 @@ namespace Truck
         [SerializeField] private float _pitch;
         [SerializeField] private float _distance = MinDistance;
 
+        private bool _isDragging;
+
         public static float ClampPitch(float degrees)
         {
             return Mathf.Clamp(degrees, MinPitch, MaxPitch);
@@ -28,6 +31,12 @@ namespace Truck
         public static float ClampDistance(float distance)
         {
             return Mathf.Clamp(distance, MinDistance, MaxDistance);
+        }
+
+        /// <summary>A drag or wheel over a UI panel belongs to the UI, not to the camera.</summary>
+        public static bool IsPointerFree(bool isOverUi)
+        {
+            return !isOverUi;
         }
 
         public void Frame(Vector3 focus, float yaw, float pitch, float distance)
@@ -47,7 +56,17 @@ namespace Truck
                 return;
             }
 
-            if (mouse.rightButton.isPressed)
+            if (mouse.rightButton.wasPressedThisFrame)
+            {
+                _isDragging = IsPointerFree(IsPointerOverUi());
+            }
+
+            if (!mouse.rightButton.isPressed || !Application.isFocused)
+            {
+                _isDragging = false;
+            }
+
+            if (_isDragging)
             {
                 Vector2 delta = mouse.delta.ReadValue();
                 _yaw += delta.x * DegreesPerPixel;
@@ -55,10 +74,15 @@ namespace Truck
             }
 
             float scroll = mouse.scroll.ReadValue().y;
-            if (scroll != 0f)
+            if (scroll != 0f && IsPointerFree(IsPointerOverUi()))
             {
                 _distance = ClampDistance(_distance * (1f - Mathf.Sign(scroll) * ZoomFraction));
             }
+        }
+
+        private static bool IsPointerOverUi()
+        {
+            return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
         }
 
         private void LateUpdate()
