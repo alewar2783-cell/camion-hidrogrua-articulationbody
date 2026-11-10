@@ -83,7 +83,7 @@ Masas escalonadas de la raíz a la punta (mitiga oscilaciones del solver, sobre 
 
 - 4 a 6 cubos de 0.5 m, `Rigidbody` de 8 kg, `Continuous Dynamic`, `Interpolate`.
 - Pinza: luz abierta 0.8 m, cerrada 0.1 m; cerrada sobre un cubo de 0.5 m aprieta con interferencia física.
-- `Mat_GomaPinza` (dedos y cubos): fricción dinámica 0.9, estática 0.95, combine Maximum, bounciness 0.
+- `Mat_GomaPinza` (dedos y cubos): fricción dinámica 0.9, estática 0.95, combine Multiply, bounciness 0. (Enmienda de la Tarea 5: con Maximum este material ganaba contra el piso de la caja y los cubos no resbalaban antes de ~40°; con Multiply resbalan a ~27.5°. La consigna de la cátedra admite Multiply o Maximum.)
 - `Mat_AceroCaja` (piso de la caja): fricción dinámica 0.25, estática 0.3, de modo que a partir de unos 25° de inclinación los cubos resbalan.
 
 ## 7. Arquitectura de software
