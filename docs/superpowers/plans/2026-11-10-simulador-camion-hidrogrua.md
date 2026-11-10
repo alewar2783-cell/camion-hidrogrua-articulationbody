@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Proyecto en `D:\Programas\Unity\ArticulationBody`; Unity `6000.3.14f1`; escena `Assets/Scenes/Main.unity`.
+- Proyecto en la carpeta del proyecto; Unity `6000.3.14f1`; escena `Assets/Scenes/Main.unity`.
 - Exactamente 10 `ArticulationBody`; raíz `Chasis_Root` con `immovable = true`.
 - Todo GameObject con `ArticulationBody` tiene `localScale = (1,1,1)` y no tiene malla ni collider; la forma va en hijos `Visual_*`.
 - Joints: Revolute, Prismatic y Spherical. 7 drives controlados en 6 controles (los dedos comparten el comando). 2 pasivos: `Cabezal_Pinza` y `Compuerta_Trasera` (stiffness 0).
@@ -30,8 +30,8 @@
 El Editor no puede estar abierto sobre el proyecto al usar la línea de comandos. Alternativa: `Window > General > Test Runner` dentro del Editor.
 
 ```bash
-UNITY="D:/Programas/Unity/Editor/6000.3.14f1/Editor/Unity.exe"
-PROJ="D:/Programas/Unity/ArticulationBody"
+UNITY="<carpeta de Unity>/Editor/6000.3.14f1/Editor/Unity.exe"
+PROJ="<carpeta del proyecto>"
 "$UNITY" -batchmode -projectPath "$PROJ" -runTests -testPlatform EditMode -testResults "$PROJ/Temp/edit.xml" -logFile "$PROJ/Temp/edit.log"
 "$UNITY" -batchmode -projectPath "$PROJ" -runTests -testPlatform PlayMode -testResults "$PROJ/Temp/play.xml" -logFile "$PROJ/Temp/play.log"
 ```

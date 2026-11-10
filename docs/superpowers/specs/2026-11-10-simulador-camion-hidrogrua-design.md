@@ -28,7 +28,7 @@ Prototipo de simulador, entregable como build WebGL en itch.io, de un camión vo
 
 | Tema | Decisión |
 |---|---|
-| Proyecto | `D:\Programas\Unity\ArticulationBody`, ya creado (URP, Input System activo, sin Git) |
+| Proyecto | carpeta del proyecto, ya creada (URP, Input System activo, sin Git) |
 | Construcción de la jerarquía | Script de Editor idempotente (`TruckBuilder`) |
 | Datos de la Tabla Maestra | Clase estática `TruckSpec` |
 | Entrada | Input System nuevo, leyendo `Keyboard.current` y `Mouse.current` desde código |
