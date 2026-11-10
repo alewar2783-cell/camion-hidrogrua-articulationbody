@@ -169,21 +169,41 @@ namespace Truck
             public const float CabinCenterZ = 2.6f;
 
             public static readonly Vector3 BedHinge = new Vector3(0f, 0.8f, -3.5f);
-            public const float BedLength = 4.5f;
+            public const float BedLength = 3.5f;
             public const float BedWidth = 2.2f;
             public const float BedWallHeight = 0.9f;
 
             public static readonly Vector3 TowerPivot = new Vector3(0f, 0.7f, 1.4f);
-            public const float TowerHeight = 1.2f;
+            public const float TowerHeight = 1.5f;
             public const float BoomLength = 3f;
-            public const float JibLength = 2.5f;
-            public const float TelescopeLength = 2f;
+            public const float JibLength = 2f;
+            public const float TelescopeLength = 1f;
             public const float GripperOpening = 0.8f;
+
+            /// <summary>
+            /// Pitch of the telescopic section, in degrees above horizontal, at which the gripper
+            /// hangs at the center of its swing cone.
+            /// </summary>
+            public const float HeadCenterElevation = -30f;
+            public static readonly Vector3 PalmSize = new Vector3(1.1f, 0.3f, 0.5f);
+            public static readonly Vector3 FingerSize = new Vector3(0.1f, 0.6f, 0.4f);
+
+            public const float GroundSize = 80f;
+            public static readonly Vector3 YardCenter = new Vector3(0f, 0f, -12f);
+            public static readonly Vector2 YardSize = new Vector2(14f, 8f);
 
             public const float TailgateWidth = 2.2f;
             public const float TailgateHeight = 0.9f;
             public static readonly Vector3 TailgateHinge =
                 new Vector3(0f, BedHinge.y + BedWallHeight, BedHinge.z);
+        }
+
+        public static class Materials
+        {
+            public const float GripDynamicFriction = 0.9f;
+            public const float GripStaticFriction = 0.95f;
+            public const float SteelDynamicFriction = 0.25f;
+            public const float SteelStaticFriction = 0.3f;
         }
 
         public static class Loads

@@ -1,0 +1,164 @@
+using System.Collections;
+using System.Collections.Generic;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
+
+namespace Truck.Tests
+{
+    public class TruckGravityTests
+    {
+        private const float SettleSeconds = 5f;
+        private const float AngularToleranceDegrees = 1f;
+        private const float LinearToleranceMeters = 0.01f;
+        private const float MaxLinearSpeed = 0.2f;
+        private const float MaxAngularSpeed = 0.5f;
+        private const float MaxHangAngleDegrees = 5f;
+
+        [TearDown]
+        public void TearDown()
+        {
+            GameObject root = GameObject.Find(TruckBuilder.RootName);
+            if (root != null)
+            {
+                Object.Destroy(root);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator Build_CreatesTenArticulationBodies()
+        {
+            GameObject root = TruckBuilder.Build(BuildMode.NoDrives);
+            yield return new WaitForSeconds(SettleSeconds);
+
+            ArticulationBody[] bodies = root.GetComponentsInChildren<ArticulationBody>();
+
+            Assert.AreEqual(10, bodies.Length);
+            foreach (ArticulationBody body in bodies)
+            {
+                Assert.AreEqual(Vector3.one, body.transform.localScale, body.name);
+                Assert.IsNull(body.GetComponent<MeshRenderer>(), body.name);
+                Assert.IsNull(body.GetComponent<Collider>(), body.name);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator Build_Twice_LeavesSingleRoot()
+        {
+            TruckBuilder.Build(BuildMode.NoDrives);
+            GameObject root = TruckBuilder.Build(BuildMode.NoDrives);
+            yield return new WaitForSeconds(SettleSeconds);
+
+            int roots = 0;
+            foreach (GameObject candidate in Object.FindObjectsByType<GameObject>(
+                FindObjectsSortMode.None))
+            {
+                if (candidate.name == TruckBuilder.RootName)
+                {
+                    roots++;
+                }
+            }
+
+            Assert.AreEqual(1, roots);
+            Assert.AreEqual(10, root.GetComponentsInChildren<ArticulationBody>().Length);
+        }
+
+        [UnityTest]
+        public IEnumerator NoDrives_Settles_WithoutNaN()
+        {
+            GameObject root = TruckBuilder.Build(BuildMode.NoDrives);
+            yield return new WaitForSeconds(SettleSeconds);
+
+            foreach (ArticulationBody body in root.GetComponentsInChildren<ArticulationBody>())
+            {
+                AssertFinite(body.transform.position, body.name);
+                for (int i = 0; i < body.dofCount; i++)
+                {
+                    Assert.IsTrue(float.IsFinite(body.jointPosition[i]), body.name);
+                }
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator NoDrives_RespectsLimits()
+        {
+            GameObject root = TruckBuilder.Build(BuildMode.NoDrives);
+            yield return new WaitForSeconds(SettleSeconds);
+
+            foreach (BodySpec spec in TruckSpec.Bodies)
+            {
+                if (spec.Joint == JointKind.Root || spec.Joint == JointKind.Spherical)
+                {
+                    continue;
+                }
+
+                ArticulationBody body = FindBody(root, spec.Name);
+                bool isAngular = spec.Joint == JointKind.Revolute;
+                float tolerance = isAngular ? AngularToleranceDegrees : LinearToleranceMeters;
+                float position = JointAxis.ToDisplay(isAngular, body.jointPosition[0]);
+
+                Assert.GreaterOrEqual(position, spec.Lower - tolerance, spec.Name);
+                Assert.LessOrEqual(position, spec.Upper + tolerance, spec.Name);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator NoDrives_Settles_AtRest()
+        {
+            GameObject root = TruckBuilder.Build(BuildMode.NoDrives);
+            yield return new WaitForSeconds(SettleSeconds);
+
+            foreach (ArticulationBody body in root.GetComponentsInChildren<ArticulationBody>())
+            {
+                if (body.isRoot)
+                {
+                    continue;
+                }
+
+                Assert.Less(body.linearVelocity.magnitude, MaxLinearSpeed, body.name);
+                Assert.Less(body.angularVelocity.magnitude, MaxAngularSpeed, body.name);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator NoDrives_GripperHangsVertical()
+        {
+            GameObject root = TruckBuilder.Build(BuildMode.NoDrives);
+            yield return new WaitForSeconds(SettleSeconds);
+
+            ArticulationBody head = FindBody(root, TruckSpec.Get(BodyId.CabezalPinza).Name);
+            float angle = Vector3.Angle(head.transform.up, Vector3.up);
+
+            Assert.Less(angle, MaxHangAngleDegrees);
+        }
+
+        private static ArticulationBody FindBody(GameObject root, string bodyName)
+        {
+            var pending = new Queue<Transform>();
+            pending.Enqueue(root.transform);
+            while (pending.Count > 0)
+            {
+                Transform current = pending.Dequeue();
+                if (current.name == bodyName)
+                {
+                    return current.GetComponent<ArticulationBody>();
+                }
+
+                foreach (Transform child in current)
+                {
+                    pending.Enqueue(child);
+                }
+            }
+
+            Assert.Fail("Body not found: " + bodyName);
+            return null;
+        }
+
+        private static void AssertFinite(Vector3 value, string label)
+        {
+            Assert.IsTrue(
+                float.IsFinite(value.x) && float.IsFinite(value.y) && float.IsFinite(value.z),
+                label);
+        }
+    }
+}
