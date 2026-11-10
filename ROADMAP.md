@@ -16,7 +16,7 @@ Detalle de cada tarea: `docs/superpowers/plans/2026-11-10-simulador-camion-hidro
 | 5 | Cargas y tarea | Cubos se agarran, suben y se descargan abriendo la compuerta, de forma repetible | [x] `08b9290` |
 | 6 | UI y cámara | Sliders, telemetría `Target / Real`, botón de reinicio y cámara orbital | [x] `4a3459f` |
 | 7 | Build WebGL temprana | Build probada en el navegador; ajustes de física si hace falta | [x] `7fdfadf` |
-| 8 | Entrega | README, diagrama y explicación, checklist, guion del video, repo limpio | [x] commit `docs: README, diagrama...` |
+| 8 | Entrega | README, diagrama y explicación, checklist, guion del video, repo limpio | [x] `5d68693` |
 
 ## Fuera del repositorio (lo hace el usuario)
 

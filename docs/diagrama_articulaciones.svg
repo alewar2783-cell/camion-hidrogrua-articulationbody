@@ -14,7 +14,7 @@
 <path d="M830 200 V230" fill="none" stroke="#333" stroke-width="2" marker-end="url(#ah)"/>
 <rect x="380" y="10" width="300" height="70" rx="8" fill="#eeeeee" stroke="#444444" stroke-width="2"/>
 <text x="530.0" y="32" text-anchor="middle" font-weight="bold" font-size="15">1 Chasis_Root</text>
-<text x="530.0" y="52" text-anchor="middle" font-size="13">raíz, immovable</text>
+<text x="530.0" y="52" text-anchor="middle" font-size="13">raíz, inmóvil (immovable)</text>
 <text x="530.0" y="70" text-anchor="middle" font-size="13">1000 kg</text>
 <rect x="60" y="130" width="340" height="70" rx="8" fill="#e8f0fe" stroke="#1a56a8" stroke-width="2"/>
 <text x="230.0" y="152" text-anchor="middle" font-weight="bold" font-size="15">2 Torre_Base</text>

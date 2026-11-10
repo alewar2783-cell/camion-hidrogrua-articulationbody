@@ -6,7 +6,7 @@ Reglas de la consigna: repositorio público sin `Library`, `Temp`, `Logs` ni `Bu
 
 - [x] **Sin archivos generados:** `.gitignore` excluye `Library/`, `Temp/`, `Obj/`, `Build/`, `Builds/`, `Logs/`, `UserSettings/` y `MemoryCaptures/`; `git ls-files` no contiene ninguno de esos directorios. Se versionan los `.meta`.
 - [x] **Sin rutas absolutas locales** en los archivos de texto versionados.
-- [x] **Abre y corre desde un clon limpio** con Unity 6000.3.14f1, sin pasos manuales: la escena `Assets/Scenes/Main.unity` ya contiene el camión y los tests pasan (ver el registro de verificación de la tarea 8).
+- [x] **Abre y corre desde un clon limpio** con Unity 6000.3.14f1, sin pasos manuales: la escena `Assets/Scenes/Main.unity` ya contiene el camión y, en un clon limpio, los tests de EditMode (23) y los de PlayMode de la escena guardada (3) pasaron sin pasos manuales.
 - [x] **Requisitos del mecanismo** (cubiertos por `TruckSpecTests`): 10 cuerpos, 3 tipos de joint (Revolute, Prismatic, Spherical), 7 drives controlados, 2 pasivos, raíz definida.
 - [x] **Entrada y lectura de estado:** teclado (Input System) y sliders sincronizados; telemetría `Target` y `Real` por eje.
 - [x] **Interacción con Rigidbodies comunes:** 5 cubos de 8 kg.
@@ -40,11 +40,11 @@ La build (`Build/WebGL`) no se versiona; hay que generarla y comprimirla con `in
 # (o desde el Editor: Tools > Truck > Build WebGL)
 
 # 2) Comprimir el contenido de Build/WebGL (PowerShell o Git Bash; tar de Windows escribe rutas con "/")
-cd <carpeta del proyecto>/Build/WebGL
-tar -a -c -f ../camion-hidrogrua-webgl.zip *
+cd <carpeta del proyecto>
+tar -a -c -f Build/camion-hidrogrua-webgl.zip -C Build/WebGL .
 ```
 
-Comprobar que el `.zip` tiene `index.html` y la carpeta `Build/` en la raíz. Se evita `Compress-Archive` de Windows PowerShell 5.1 porque genera rutas con barras invertidas que algunos servidores no leen.
+Comprobar que el `.zip` tiene `index.html` y la carpeta `Build/` en la raíz. Alternativa en PowerShell: `Compress-Archive -Path "<carpeta del proyecto>/Build/WebGL/*" -DestinationPath "<carpeta del proyecto>/Build/camion-hidrogrua-webgl.zip"`. En Windows PowerShell 5.1 las rutas del `.zip` pueden quedar con barras invertidas; si itch.io no lo carga, usar `tar`.
 
 Prueba local previa (equivale al caso de itch.io, que sirve los `.unityweb` sin cabecera de compresión y usa el *Decompression Fallback*):
 
@@ -59,7 +59,7 @@ python -m http.server 8765 --bind 127.0.0.1
 - [ ] Crear el proyecto (*Kind of project*: **HTML**).
 - [ ] Subir el `.zip` y marcar **This file will be played in the browser**.
 - [ ] *Viewport dimensions*: por ejemplo 1024 × 768 (la interfaz se verificó a ese tamaño). Opcional: *Click to launch in fullscreen*.
-- [ ] Visibilidad: *Public* o *Restricted* con enlace (decidir con la cátedra qué se exige). Guardar y abrir la página.
+- [ ] Visibilidad: lo que importa es que la página abra y el juego cargue **en una ventana privada, sin iniciar sesión, para cualquiera que tenga el enlace**. Revisar las opciones de visibilidad de la página en itch.io y comprobarlo en una ventana privada.
 - [ ] **Abrir la URL en una ventana privada** y comprobar que carga (unos 20 MB), que se ve el panel y la grúa, y que responden el teclado (todos los pares de teclas) y los sliders.
 - [ ] Completar la URL en el `README.md`.
 

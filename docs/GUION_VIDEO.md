@@ -4,7 +4,7 @@ Objetivo: mostrar en vivo, sin cortes de edición en la maniobra, la carga de un
 
 ## Cómo salen los tiempos
 
-Los tiempos de mantener cada tecla son `recorrido / velocidad` con las velocidades de `TruckSpec` (torre 45 °/s, pluma 30 °/s, secundario 35 °/s, telescópico 0.8 m/s, pinza 0.4 m/s, caja 20 °/s) y los recorridos entre las poses de `TruckSpec.Poses`. El `Real` llega al `Target` con un retardo de uno a dos segundos, así que después de cada movimiento conviene esperar a que el `Real` alcance al `Target` antes de seguir. Son valores aproximados: ensayar la maniobra varias veces antes de grabar.
+Los tiempos de mantener cada tecla son `recorrido / velocidad` con las velocidades de `TruckSpec` (torre 45 °/s, pluma 30 °/s, secundario 35 °/s, telescópico 0.8 m/s, pinza 0.4 m/s, caja 20 °/s) y los recorridos entre las poses de `TruckSpec.Poses`. El `Real` sigue al `Target` con cierto retardo (no medido; estimar un par de segundos tras cada movimiento largo), así que conviene esperar a que el `Real` alcance al `Target` antes de seguir. Son valores aproximados: ensayar la maniobra varias veces antes de grabar.
 
 Poses (torre, pluma, secundario, telescópico), de `TruckSpec.Poses`:
 
@@ -24,8 +24,8 @@ Poses (torre, pluma, secundario, telescópico), de `TruckSpec.Poses`:
 | 0:30 a 0:55 | Aproximación al primer cubo | `A` 1.7 s (torre a -76.6°) con la grúa alta; luego `S` 1.3 s (pluma a 32°), `F` 1.0 s (secundario a -81°) y `T` 1.3 s (telescópico a 1.0 m); esperar que el `Real` asiente | "Fase 1: carga" |
 | 0:55 a 1:05 | Descenso a los dedos alrededor del cubo | pluma 32° a 31.2° y secundario -81° a -83.2°: es un ajuste fino, hacerlo con los sliders | |
 | 1:05 a 1:15 | Agarre | `E` 1 s (cierra: cada dedo llega a su tope de 0.35 m en 0.9 s, pero se frena contra el cubo); esperar 1 s | "Agarre por fricción: 300 N por dedo" |
-| 1:15 a 1:30 | Elevación y giro hacia la caja | `W` 1.3 s (pluma a unos 55°, el cubo queda a más de 2 m del suelo); `D` 1.7 s (torre de -76.6° a 0°) | |
-| 1:30 a 1:45 | Colocación sobre el piso de la caja | `S` 0.6 s (pluma a 38°), `F` 0.7 s (secundario a -105°), `G` 1.3 s (telescópico a 0); ajustar con sliders hasta quedar a 1.2 m sobre el piso | |
+| 1:15 a 1:30 | Elevación y giro hacia la caja | `W` 0.8 s (pluma de 31.2° a unos 55°, el cubo queda a más de 2 m del suelo); `D` 1.7 s (torre de -76.6° a 0°) | |
+| 1:30 a 1:45 | Colocación sobre el piso de la caja | `S` 0.6 s (pluma de 55° a 38°), `F` 0.6 s (secundario de -83.2° a -105°), `G` 1.3 s (telescópico a 0); ajustar con sliders hasta quedar a 1.2 m sobre el piso | |
 | 1:45 a 1:50 | Soltar | `Q` 0.9 s (abre); el cubo cae unos 0.3 m al piso | |
 | 1:50 a 2:05 | Repliegue de la grúa | `W` 1.1 s (pluma a 70°) y `R` 1.7 s (secundario a -45°); telescópico en 0 y torre en 0 | "Fase 2: descarga" |
 | 2:05 a 2:30 | Volcado | `↑` o `X` 2.75 s (caja a 55°) y soltar; esperar unos 4 s a que el cubo resbale (a unos 27°), abra la compuerta (hasta 70° a 80°) y caiga al corralón | |
@@ -49,3 +49,26 @@ Si falta tiempo para llegar a 3:00, se acorta la espera del volcado; si sobra, r
 - **Cabezal en el borde.** En `BedReach` el cabezal está a unos 3° del borde de su cono de swing (±40°); si se ve inclinado, subir un poco la pluma o extender el secundario.
 - **Pendiente de probar en el navegador:** teclas sostenidas, reinicio y orbitar con botón derecho (`CALIBRACION.md`, sección 9). Verificar antes de grabar que el teclado responde en la página de itch.io.
 - **Cámara.** El botón derecho orbita y la rueda acerca; encuadrar la grúa y la caja al mismo tiempo, y acercarse al cabezal en el agarre.
+
+## Aritmética de los tiempos
+
+Tiempo = recorrido / velocidad (velocidades de `TruckSpec`: torre 45 °/s, pluma 30 °/s, secundario 35 °/s, telescópico 0.8 m/s, pinza 0.4 m/s, caja 20 °/s). Los recorridos salen de las poses y de los valores en que termina la fila anterior.
+
+| Movimiento | Desde | Hasta | Recorrido | Cálculo | Tecla y tiempo |
+|---|---|---|---|---|---|
+| Torre al cubo | 0° | -76.6° | 76.6° | 76.6 / 45 = 1.70 s | `A` 1.7 s |
+| Pluma baja | 70° | 32° | 38° | 38 / 30 = 1.27 s | `S` 1.3 s |
+| Secundario baja | -45° | -81° | 36° | 36 / 35 = 1.03 s | `F` 1.0 s |
+| Telescópico sale | 0 m | 1.0 m | 1.0 m | 1.0 / 0.8 = 1.25 s | `T` 1.3 s |
+| Descenso fino | pluma 32°, sec. -81° | 31.2°, -83.2° | 0.8°, 2.2° | 0.8 / 30 = 0.03 s; 2.2 / 35 = 0.06 s | sliders |
+| Cerrar pinza | 0 m | 0.35 m | 0.35 m | 0.35 / 0.4 = 0.875 s | `E` 1 s (se frena contra el cubo) |
+| Pluma sube con el cubo | 31.2° | 55° | 23.8° | 23.8 / 30 = 0.79 s | `W` 0.8 s |
+| Torre a la caja | -76.6° | 0° | 76.6° | 76.6 / 45 = 1.70 s | `D` 1.7 s |
+| Pluma baja a la caja | 55° | 38° | 17° | 17 / 30 = 0.57 s | `S` 0.6 s |
+| Secundario a la caja | -83.2° | -105° | 21.8° | 21.8 / 35 = 0.62 s | `F` 0.6 s |
+| Telescópico entra | 1.0 m | 0 m | 1.0 m | 1.0 / 0.8 = 1.25 s | `G` 1.3 s |
+| Abrir pinza | 0.35 m | 0 m | 0.35 m | 0.35 / 0.4 = 0.875 s | `Q` 0.9 s |
+| Pluma al repliegue | 38° | 70° | 32° | 32 / 30 = 1.07 s | `W` 1.1 s |
+| Secundario al repliegue | -105° | -45° | 60° | 60 / 35 = 1.71 s | `R` 1.7 s |
+| Caja sube | 0° | 55° | 55° | 55 / 20 = 2.75 s | `↑` o `X` 2.75 s |
+| Caja baja | 55° | 0° | 55° | 55 / 20 = 2.75 s | `↓` o `Z` 2.75 s |
