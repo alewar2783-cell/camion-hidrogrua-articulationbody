@@ -1,7 +1,11 @@
 using System.Collections;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 
 namespace Truck.Tests
 {
@@ -29,6 +33,12 @@ namespace Truck.Tests
         private const float MinGateOpenDegrees = 30f;
         private const float MaxGateClosedDegrees = 5f;
         private const float GateCloseSeconds = 6f;
+        private const float InitialPoseSeconds = 2f;
+        private const float InitialAngularToleranceDegrees = 3f;
+        private const float InitialLinearToleranceMeters = 0.03f;
+        private const float InitialTransientSeconds = 1f;
+        private const float MaxInitialSpeed = 0.5f;
+        private const string AccentedSample = "Telescópico Cámara ° áéíóú";
 
         // Where the first cube waits while the arm swings over its spawn point.
         private static readonly Vector3 ParkedPosition = new Vector3(-6f, 0.25f, 0.4f);
@@ -39,7 +49,7 @@ namespace Truck.Tests
             foreach (string objectName in new[]
             {
                 TruckBuilder.RootName, TruckLoadsFactory.EnvironmentName,
-                TruckLoadsFactory.LoadsRootName
+                TruckLoadsFactory.LoadsRootName, TruckUiFactory.RootName
             })
             {
                 GameObject existing = GameObject.Find(objectName);
@@ -48,6 +58,126 @@ namespace Truck.Tests
                     Object.Destroy(existing);
                 }
             }
+        }
+
+        [UnityTest]
+        public IEnumerator Build_StartsInStowedPose_AndStaysCalm()
+        {
+            GameObject root = TruckBuilder.Build(BuildMode.Full);
+            SimulatorController controller = root.GetComponent<SimulatorController>();
+            ArticulationBody[] bodies = root.GetComponentsInChildren<ArticulationBody>();
+
+            float maxSpeed = 0f;
+            float maxExcess = float.MinValue;
+            float start = Time.time;
+            float end = start + InitialPoseSeconds;
+            while (Time.time < end)
+            {
+                foreach (ArticulationBody body in bodies)
+                {
+                    Vector3 position = body.transform.position;
+                    Assert.IsTrue(float.IsFinite(position.x + position.y + position.z),
+                        body.name);
+                    // The passive gripper swings for a moment until it hangs; only the settled
+                    // part of the window is checked for speed.
+                    if (Time.time - start >= InitialTransientSeconds)
+                    {
+                        maxSpeed = Mathf.Max(maxSpeed, body.linearVelocity.magnitude);
+                    }
+                }
+
+                foreach (JointAxis axis in controller.Axes)
+                {
+                    maxExcess = Mathf.Max(maxExcess, DeviationFromStowed(axis) - Tolerance(axis));
+                }
+
+                yield return null;
+            }
+
+            foreach (JointAxis axis in controller.Axes)
+            {
+                float stowed = TruckSpec.Poses.Stowed[(int)axis.Control];
+                Assert.AreEqual(stowed, axis.Target, axis.Control.ToString());
+                Assert.AreEqual(stowed, axis.DefaultTarget, axis.Control.ToString());
+                Assert.LessOrEqual(DeviationFromStowed(axis), Tolerance(axis),
+                    axis.Control.ToString());
+            }
+
+            Assert.LessOrEqual(maxExcess, 0f, "deviation from the stowed pose during start");
+            Assert.Less(maxSpeed, MaxInitialSpeed, "max body speed once settled");
+        }
+
+        [UnityTest]
+        public IEnumerator Ui_Build_CreatesSixSlidersAndResetButton()
+        {
+            GameObject root = TruckBuilder.Build(BuildMode.Full);
+            SimulatorController controller = root.GetComponent<SimulatorController>();
+            yield return null;
+
+            GameObject ui = GameObject.Find(TruckUiFactory.RootName);
+            Assert.IsNotNull(ui, "ui root");
+            Slider[] sliders = ui.GetComponentsInChildren<Slider>();
+            Assert.AreEqual(TruckSpec.Controls.Length, sliders.Length);
+            for (int i = 0; i < sliders.Length; i++)
+            {
+                ControlSpec spec = TruckSpec.Controls[i];
+                string label = spec.Id.ToString();
+                Assert.AreEqual(spec.Min, sliders[i].minValue, label);
+                Assert.AreEqual(spec.Max, sliders[i].maxValue, label);
+                Assert.AreEqual(TruckSpec.Poses.Stowed[i], sliders[i].value, 1e-4f, label);
+                Assert.AreEqual(Navigation.Mode.None, sliders[i].navigation.mode, label);
+            }
+
+            Button[] buttons = ui.GetComponentsInChildren<Button>();
+            Assert.AreEqual(1, buttons.Length);
+            Assert.AreEqual(1, buttons[0].onClick.GetPersistentEventCount());
+            Assert.AreEqual(TruckUiFactory.ResetButtonLabel,
+                buttons[0].GetComponentInChildren<TMP_Text>().text);
+
+            var canvas = ui.GetComponentInChildren<Canvas>();
+            var scaler = canvas.GetComponent<CanvasScaler>();
+            Assert.AreEqual(CanvasScaler.ScaleMode.ScaleWithScreenSize, scaler.uiScaleMode);
+            Assert.AreEqual(new Vector2(1920f, 1080f), scaler.referenceResolution);
+
+            var module = Object.FindFirstObjectByType<InputSystemUIInputModule>();
+            Assert.IsNotNull(module, "input module");
+            Assert.IsNotNull(module.actionsAsset, "ui actions");
+            Assert.IsNotNull(EventSystem.current, "event system");
+
+            foreach (TMP_Text text in ui.GetComponentsInChildren<TMP_Text>())
+            {
+                Assert.IsTrue(text.font.HasCharacters(text.text, out _), text.text);
+            }
+
+            Assert.IsTrue(TMP_Settings.defaultFontAsset.HasCharacters(AccentedSample, out _),
+                "default font glyphs");
+            Assert.IsNotNull(Camera.main.GetComponent<OrbitCamera>(), "orbit camera");
+            Assert.AreEqual(TruckSpec.Controls.Length, controller.Axes.Length);
+        }
+
+        [UnityTest]
+        public IEnumerator Ui_Telemetry_FollowsAxisAndSliderWritesTarget()
+        {
+            GameObject root = TruckBuilder.Build(BuildMode.Full);
+            JointAxis boom = root.GetComponent<SimulatorController>().GetAxis(ControlId.Pluma);
+            yield return null;
+            GameObject ui = GameObject.Find(TruckUiFactory.RootName);
+            Slider slider = ui.GetComponentsInChildren<Slider>()[(int)ControlId.Pluma];
+            TMP_Text label = slider.transform.parent.GetComponentInChildren<TMP_Text>();
+
+            boom.SetTarget(40f);
+            yield return null;
+
+            Assert.AreEqual(40f, slider.value, 1e-4f, "slider follows keyboard target");
+            Assert.IsTrue(label.text.StartsWith("Pluma principal | Target: 40.0° | Real: "),
+                label.text);
+
+            slider.value = 25f;
+            Assert.AreEqual(25f, boom.Target, 1e-4f, "slider writes the target");
+
+            EventSystem.current.SetSelectedGameObject(slider.gameObject);
+            slider.GetComponent<TelemetryUI>().OnPointerUp(null);
+            Assert.IsNull(EventSystem.current.currentSelectedGameObject, "slider deselected");
         }
 
         [UnityTest]
@@ -265,6 +395,17 @@ namespace Truck.Tests
             {
                 axis.SetTarget(pose[(int)axis.Control]);
             }
+        }
+
+        private static float Tolerance(JointAxis axis)
+        {
+            return axis.Spec.IsAngular ? InitialAngularToleranceDegrees
+                : InitialLinearToleranceMeters;
+        }
+
+        private static float DeviationFromStowed(JointAxis axis)
+        {
+            return Mathf.Abs(axis.Real - TruckSpec.Poses.Stowed[(int)axis.Control]);
         }
 
         private static float HeadDistance(Rigidbody cube, ArticulationBody head)

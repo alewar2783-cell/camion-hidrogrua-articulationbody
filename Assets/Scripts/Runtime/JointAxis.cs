@@ -6,14 +6,17 @@ namespace Truck
     {
         public const float MaxDeltaTime = 0.05f;
 
-        private ControlSpec _spec;
-        private ArticulationBody _primary;
-        private ArticulationBody _mirror;
-        private float _target;
+        // Only the id is serialized; the spec is always read from TruckSpec so that a saved
+        // scene keeps working.
+        [SerializeField] private ControlId _control;
+        [SerializeField] private ArticulationBody _primary;
+        [SerializeField] private ArticulationBody _mirror;
+        [SerializeField] private float _target;
+        [SerializeField] private float _defaultTarget;
 
-        public ControlId Control => _spec.Id;
+        public ControlId Control => _control;
 
-        public ControlSpec Spec => _spec;
+        public ControlSpec Spec => TruckSpec.Get(_control);
 
         /// <summary>Commanded position: degrees for angular axes, meters otherwise.</summary>
         public float Target => _target;
@@ -28,27 +31,47 @@ namespace Truck
                     return 0f;
                 }
 
-                return ToDisplay(_spec.IsAngular, _primary.jointPosition[0]);
+                return ToDisplay(Spec.IsAngular, _primary.jointPosition[0]);
             }
         }
 
+        /// <summary>Target the axis starts with and returns to on ResetTarget.</summary>
+        public float DefaultTarget => _defaultTarget;
+
         public void Initialize(ControlSpec spec, ArticulationBody primary,
-            ArticulationBody mirror = null)
+            ArticulationBody mirror = null, float defaultTarget = 0f)
         {
-            _spec = spec;
+            _control = spec.Id;
             _primary = primary;
             _mirror = mirror;
-            _target = 0f;
+            _defaultTarget = ClampTarget(defaultTarget, spec.Min, spec.Max);
+            _target = _defaultTarget;
         }
 
         public void SetTarget(float value)
         {
-            _target = ClampTarget(value, _spec.Min, _spec.Max);
+            if (float.IsNaN(value))
+            {
+                return;
+            }
+
+            ControlSpec spec = Spec;
+            _target = ClampTarget(value, spec.Min, spec.Max);
         }
 
         public void ResetTarget()
         {
-            _target = 0f;
+            _target = _defaultTarget;
+        }
+
+        /// <summary>
+        /// Teleports the joints to the current target. Only valid once the articulation exists
+        /// (after its root is active); it avoids starting in a pose that collides.
+        /// </summary>
+        public void SnapToTarget()
+        {
+            SnapBody(_primary, _target);
+            SnapBody(_mirror, -_target);
         }
 
         public static float ClampTarget(float value, float min, float max)
@@ -59,6 +82,11 @@ namespace Truck
         public static float Step(float target, float input, float speed, float deltaTime,
             float min, float max)
         {
+            if (float.IsNaN(input) || float.IsNaN(speed) || float.IsNaN(deltaTime))
+            {
+                return target;
+            }
+
             float dt = Mathf.Min(deltaTime, MaxDeltaTime);
             return ClampTarget(target + input * speed * dt, min, max);
         }
@@ -67,6 +95,18 @@ namespace Truck
         public static float ToDisplay(bool isAngular, float jointPosition)
         {
             return isAngular ? jointPosition * Mathf.Rad2Deg : jointPosition;
+        }
+
+        private void SnapBody(ArticulationBody body, float value)
+        {
+            if (body == null)
+            {
+                return;
+            }
+
+            float joint = Spec.IsAngular ? value * Mathf.Deg2Rad : value;
+            body.jointPosition = new ArticulationReducedSpace(joint);
+            body.jointVelocity = new ArticulationReducedSpace(0f);
         }
 
         private void FixedUpdate()

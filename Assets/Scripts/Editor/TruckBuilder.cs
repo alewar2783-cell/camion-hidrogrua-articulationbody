@@ -14,6 +14,12 @@ namespace Truck
     public static class TruckBuilder
     {
         public const string RootName = "Truck";
+        public const string CameraName = "Main Camera";
+
+        private static readonly Vector3 CameraFocus = new Vector3(2f, 1f, -1f);
+        private const float CameraYaw = -35f;
+        private const float CameraPitch = 28f;
+        private const float CameraDistance = 16f;
 
         /// <summary>Destroys any previous truck and environment, then builds a new truck.</summary>
         public static GameObject Build(BuildMode mode)
@@ -21,6 +27,7 @@ namespace Truck
             Remove(RootName);
             Remove(TruckLoadsFactory.EnvironmentName);
             Remove(TruckLoadsFactory.LoadsRootName);
+            Remove(TruckUiFactory.RootName);
 
             TruckLoadsFactory.CreateGround();
             (PhysicsMaterial grip, PhysicsMaterial steel) = TruckLoadsFactory.CreateMaterials();
@@ -45,21 +52,57 @@ namespace Truck
                 }
             }
 
+            JointAxis[] axes = null;
             if (mode == BuildMode.Full)
             {
-                WireControls(root, nodes);
+                axes = WireControls(root, nodes);
             }
 
             AssetDatabase.SaveAssets();
             root.SetActive(true);
             // Set after activation: the flag is ignored while the articulation does not exist yet.
             rootBody.immovable = true;
+
+            SetupCamera();
+            if (axes != null)
+            {
+                // Also after activation: joint positions need the articulation. Starting stowed
+                // keeps the jib from lying across the bed and swinging up through its walls.
+                foreach (JointAxis axis in axes)
+                {
+                    axis.SnapToTarget();
+                }
+
+                TruckUiFactory.Create(axes, root.GetComponent<SceneResetter>());
+            }
+
             return root;
+        }
+
+        private static void SetupCamera()
+        {
+            Camera camera = Camera.main;
+            if (camera == null)
+            {
+                var cameraObject = new GameObject(CameraName);
+                cameraObject.tag = "MainCamera";
+                camera = cameraObject.AddComponent<Camera>();
+                cameraObject.AddComponent<AudioListener>();
+            }
+
+            var orbit = camera.GetComponent<OrbitCamera>();
+            if (orbit == null)
+            {
+                orbit = camera.gameObject.AddComponent<OrbitCamera>();
+            }
+
+            orbit.Frame(CameraFocus, CameraYaw, CameraPitch, CameraDistance);
         }
 
         // The first body of a control is the primary one; a second body is driven in mirror
         // (the gripper fingers move in opposite directions).
-        private static void WireControls(GameObject root, Dictionary<BodyId, Transform> nodes)
+        private static JointAxis[] WireControls(GameObject root,
+            Dictionary<BodyId, Transform> nodes)
         {
             var axes = new JointAxis[TruckSpec.Controls.Length];
             foreach (ControlSpec control in TruckSpec.Controls)
@@ -85,12 +128,14 @@ namespace Truck
                 }
 
                 JointAxis axis = root.AddComponent<JointAxis>();
-                axis.Initialize(control, primary, mirror);
+                axis.Initialize(control, primary, mirror,
+                    TruckSpec.Poses.Stowed[(int)control.Id]);
                 axes[(int)control.Id] = axis;
             }
 
             root.AddComponent<SimulatorController>().Initialize(axes);
             root.AddComponent<SceneResetter>();
+            return axes;
         }
 
         [MenuItem("Tools/Truck/Build Scene (No Drives)")]

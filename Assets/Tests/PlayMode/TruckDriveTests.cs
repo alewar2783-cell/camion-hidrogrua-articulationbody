@@ -109,7 +109,7 @@ namespace Truck.Tests
         }
 
         [UnityTest]
-        public IEnumerator ResetTargets_ReturnsToZero()
+        public IEnumerator ResetTargets_ReturnsToStowedPose()
         {
             GameObject root = TruckBuilder.Build(BuildMode.Full);
             SimulatorController controller = root.GetComponent<SimulatorController>();
@@ -128,7 +128,8 @@ namespace Truck.Tests
 
             foreach (JointAxis axis in controller.Axes)
             {
-                Assert.AreEqual(0f, axis.Real, Tolerance(axis.Spec), axis.Control.ToString());
+                Assert.AreEqual(TruckSpec.Poses.Stowed[(int)axis.Control], axis.Real,
+                    Tolerance(axis.Spec), axis.Control.ToString());
             }
         }
 
