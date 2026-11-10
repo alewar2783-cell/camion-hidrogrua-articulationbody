@@ -8,20 +8,12 @@ namespace Truck
 
         public static (PhysicsMaterial Grip, PhysicsMaterial Steel) CreateMaterials()
         {
-            var grip = new PhysicsMaterial("Mat_GomaPinza")
-            {
-                dynamicFriction = TruckSpec.Materials.GripDynamicFriction,
-                staticFriction = TruckSpec.Materials.GripStaticFriction,
-                bounciness = 0f,
-                frictionCombine = PhysicsMaterialCombine.Maximum,
-                bounceCombine = PhysicsMaterialCombine.Minimum
-            };
-            var steel = new PhysicsMaterial("Mat_AceroCaja")
-            {
-                dynamicFriction = TruckSpec.Materials.SteelDynamicFriction,
-                staticFriction = TruckSpec.Materials.SteelStaticFriction,
-                bounciness = 0f
-            };
+            PhysicsMaterial grip = TruckAssetStore.LoadOrCreatePhysicsMaterial("Mat_GomaPinza",
+                TruckSpec.Materials.GripDynamicFriction, TruckSpec.Materials.GripStaticFriction,
+                PhysicsMaterialCombine.Maximum);
+            PhysicsMaterial steel = TruckAssetStore.LoadOrCreatePhysicsMaterial("Mat_AceroCaja",
+                TruckSpec.Materials.SteelDynamicFriction, TruckSpec.Materials.SteelStaticFriction,
+                PhysicsMaterialCombine.Average);
             return (grip, steel);
         }
 

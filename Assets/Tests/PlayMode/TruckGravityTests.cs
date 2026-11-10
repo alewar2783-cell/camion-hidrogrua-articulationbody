@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -130,6 +131,51 @@ namespace Truck.Tests
             float angle = Vector3.Angle(head.transform.up, Vector3.up);
 
             Assert.Less(angle, MaxHangAngleDegrees);
+        }
+
+        [UnityTest]
+        public IEnumerator Build_PhysicsMaterials_ArePersistedAssetsWithSpecValues()
+        {
+            GameObject root = TruckBuilder.Build(BuildMode.NoDrives);
+            yield return null;
+
+            foreach (string fingerName in new[] { "Visual_DedoIzquierdo", "Visual_DedoDerecho" })
+            {
+                AssertMaterial(FindChild(root, fingerName), TruckSpec.Materials.GripDynamicFriction,
+                    TruckSpec.Materials.GripStaticFriction, PhysicsMaterialCombine.Maximum);
+            }
+
+            AssertMaterial(FindChild(root, "Visual_PisoCaja"),
+                TruckSpec.Materials.SteelDynamicFriction, TruckSpec.Materials.SteelStaticFriction,
+                PhysicsMaterialCombine.Average);
+        }
+
+        private static void AssertMaterial(Transform visual, float dynamicFriction,
+            float staticFriction, PhysicsMaterialCombine combine)
+        {
+            PhysicsMaterial material = visual.GetComponent<Collider>().sharedMaterial;
+            string path = AssetDatabase.GetAssetPath(material);
+
+            Assert.IsNotEmpty(path, visual.name);
+            StringAssert.StartsWith("Assets/PhysicsMaterials/", path);
+            Assert.AreEqual(dynamicFriction, material.dynamicFriction, 1e-4f, visual.name);
+            Assert.AreEqual(staticFriction, material.staticFriction, 1e-4f, visual.name);
+            Assert.AreEqual(combine, material.frictionCombine, visual.name);
+            Assert.AreEqual(0f, material.bounciness, visual.name);
+        }
+
+        private static Transform FindChild(GameObject root, string childName)
+        {
+            foreach (Transform candidate in root.GetComponentsInChildren<Transform>())
+            {
+                if (candidate.name == childName)
+                {
+                    return candidate;
+                }
+            }
+
+            Assert.Fail("Child not found: " + childName);
+            return null;
         }
 
         private static ArticulationBody FindBody(GameObject root, string bodyName)

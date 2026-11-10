@@ -43,6 +43,7 @@ namespace Truck
                 }
             }
 
+            AssetDatabase.SaveAssets();
             root.SetActive(true);
             // Set after activation: the flag is ignored while the articulation does not exist yet.
             rootBody.immovable = true;

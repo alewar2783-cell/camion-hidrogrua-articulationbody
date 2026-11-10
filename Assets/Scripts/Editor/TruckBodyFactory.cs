@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using G = Truck.TruckSpec.Geometry;
 
@@ -38,9 +37,6 @@ namespace Truck
         private const float FloorThickness = 0.1f;
         private const float TailgateThickness = 0.08f;
         private const float WheelWidth = 0.3f;
-
-        private static readonly Dictionary<Color, Material> Paints =
-            new Dictionary<Color, Material>();
 
         public static ArticulationBody CreateBody(BodySpec spec, Transform parent, BuildMode mode,
             PhysicsMaterial grip, PhysicsMaterial steel)
@@ -334,18 +330,7 @@ namespace Truck
 
         private static Material Paint(Color color)
         {
-            if (Paints.TryGetValue(color, out Material cached) && cached != null)
-            {
-                return cached;
-            }
-
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-            var material = new Material(shader != null ? shader : Shader.Find("Standard"))
-            {
-                color = color
-            };
-            Paints[color] = material;
-            return material;
+            return TruckAssetStore.LoadOrCreateVisualMaterial(color);
         }
     }
 }
