@@ -28,6 +28,8 @@ Hay 5 cubos en el suelo. La maniobra se puede repetir con el botón de reinicio.
 Unity.exe -batchmode -quit -projectPath <ruta> -executeMethod Truck.TruckSceneSaver.BuildAndSave
 ```
 
+`Main.unity` se regenera con `Tools > Truck > Build And Save Main Scene`; no editarla a mano (re-guardarla a mano produce diffs de unas 5000 líneas).
+
 Los objetos del camión se generan con `TruckBuilder`; no se editan a mano. Para cambiar algo se modifica `TruckSpec` (única fuente de masas, límites, drives y velocidades) o el generador y se vuelve a ejecutar.
 
 ## Controles
@@ -45,6 +47,8 @@ Los controles de teclado y los sliders del panel izquierdo están sincronizados:
 | Reinicio | `Retroceso` o `P`, o botón *Reiniciar Escena* | n/a | n/a |
 | Cámara | botón derecho + arrastrar (orbitar), rueda (zoom) | n/a | n/a |
 
+**En el navegador (itch.io), hacer click en el canvas para darle foco al teclado.** Sin foco las teclas no llegan al juego, y si la pestaña pierde el foco el simulador ignora las teclas hasta que vuelva.
+
 El camión arranca en una pose plegada (pluma 70°, secundario -45°). Antes de volcar hay que replegar la grúa a esa pose: si no, el brazo choca con la caja.
 
 ## La maniobra en breve
@@ -55,6 +59,10 @@ El camión arranca en una pose plegada (pluma 70°, secundario -45°). Antes de 
 4. Replegar la grúa, subir la caja con `↑`/`X` hasta 55° y esperar a que las cargas abran la compuerta y caigan; bajar la caja y comprobar que la compuerta vuelve a cerrarse.
 
 El guion paso a paso con tiempos está en [`docs/GUION_VIDEO.md`](docs/GUION_VIDEO.md).
+
+## Paquetes de Unity
+
+El `manifest.json` conserva `com.unity.ai.assistant`, `com.unity.pipeline` y `com.unity.ai.inference`. Son herramientas del autor (asistente de IA, CLI y MCP del Editor), algunas pre-release o experimentales; solo funcionan en el Editor y el simulador no las necesita. Sus versiones están fijadas en `packages-lock.json`. La build WebGL se verificó con ellos presentes sin problemas.
 
 ## Tests
 

@@ -63,3 +63,6 @@ crashlytics-build.properties
 # OS
 .DS_Store
 Thumbs.db
+
+# Local Visual Studio file
+.vsconfig

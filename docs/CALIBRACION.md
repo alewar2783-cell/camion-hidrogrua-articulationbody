@@ -26,7 +26,7 @@ Con estos valores la gravedad pura fue estable en la primera corrida: sin `NaN`,
 
 ## 3. Geometría final (`TruckSpec.Geometry`) y alcance
 
-Verificación analítica (no hay Editor visual en esta tarea; el test numérico de alcance con drives es de la Tarea 4).
+Verificación analítica de la Tarea 3; los tests numéricos de alcance con drives se agregaron en la Tarea 4 (`Reach_*`, sección 5) y los de agarre en la Tarea 5 (sección 8).
 
 Cambios respecto de los valores iniciales:
 
@@ -64,7 +64,7 @@ Orden `Torre, Pluma, Secundario, Telescópico, Pinza, Caja` (grados y metros). L
 | `GraspApproach` | -76.6 | 32 | -81 | 1.0 | 0 | 0 | sobre el primer cubo, dedos a unos 0.3 m del suelo (Tarea 5, sección 8) |
 | `GraspReach` | -76.6 | 31.2 | -83.2 | 1.0 | 0 | 0 | cabezal en (4.20, 1.08, 0.40) sobre `GroundSpawn[0]`, a 0.1° a 0.5° de la vertical, dedos 0.175 m sobre el suelo (Tarea 5, sección 8) |
 
-La tolerancia del test es 0.5 m y no se tocó. Los objetivos se calcularon con la cinemática directa y se corrigieron por el hundimiento de la pluma y el secundario (sección 5, 0.15 a 0.25 m de bajada del cabezal). Las alturas se eligieron para que los dedos queden unos 0.3 m sobre el suelo (`GroundReach`) o sobre el piso de la caja (`BedReach`): con el cabezal 0.2 m más bajo los dedos tocaban el suelo o el piso, el cabezal se inclinaba hasta 57° de la vertical y la torre se frenaba en -94°. La Tarea 5 baja desde esa pose hasta el cubo con la pluma. El piso de la caja está a 0.85 m, así que el cabezal sobre el centro queda a 1.2 m del piso.
+La tolerancia del test es 0.5 m y no se tocó. Los objetivos se calcularon con la cinemática directa y se corrigieron por el hundimiento de la pluma y el secundario (0.15 a 0.25 m de bajada del cabezal, estimada en la Tarea 3). Las alturas se eligieron para que los dedos queden unos 0.3 m sobre el suelo (`GroundReach`) o sobre el piso de la caja (`BedReach`): con el cabezal 0.2 m más bajo los dedos tocaban el suelo o el piso, el cabezal se inclinaba hasta 57° de la vertical y la torre se frenaba en -94°. La Tarea 5 baja desde esa pose hasta el cubo con la pluma. El piso de la caja está a 0.85 m, así que el cabezal sobre el centro queda a 1.2 m del piso.
 
 **Pose de reposo (`Stowed`).** Pluma elevada 70° y secundario plegado a -45° (elevación del telescópico +25°): el brazo apunta hacia atrás y arriba, a 5.7 m de altura. Con la pose de ceros el secundario queda tendido sobre la caja y el volteo de la caja lo choca: la caja sólo llegaba a 7.5° en lugar de 27.5°. Con `Stowed` y la caja a 55° la separación mínima entre cualquier collider de la grúa y de la caja (muestreo de esquinas, aristas y caras cada 0.25 s durante 4 s) es 0.73 m. El secundario queda a 80° de su tope (-125°); la pluma, a 5° del suyo (75°), llega a 67.9° por el hundimiento. Los tests de eje (`Axis_ReachesTarget`, `Axis_NeverExceedsLimits`) arrancan desde `Stowed` por la misma razón (ver sección 5).
 
@@ -105,6 +105,8 @@ Calibración de la raíz a la punta. Torque estático `τ = Σ m·g·brazo` en e
 | Dedos | sin carga estática; 8750 N de apriete con target 0.35 m contra un obstáculo | 300 (era 20 000) | n/a | 3.5 (m = 5 kg) | `forceLimit` bajado en la Tarea 5 (sección 8.2) |
 
 El torque estático consume entre 1% y 4% del `forceLimit`, así que el límite de fuerza nunca satura con carga normal. El peor caso de la pluma (5.1°) queda debajo de la tolerancia de 6° pero cerca; con la pluma plegada el hundimiento es menor.
+
+Nota sobre los números de hundimiento: 5.1° es la cota analítica del peor caso (pluma horizontal con todo extendido); los 3.5° (`GraspReach`, sección 8) y los 2.1° (`Stowed`, sección 3) son mediciones en poses concretas con menor brazo de palanca. No son contradictorios, pero no se reconciliaron en una sola tabla medida.
 
 Valores medidos en PlayMode con los seis ejes a la vez en 50% del rango y luego en el tope (corrida de diagnóstico descartada, 8 s):
 
