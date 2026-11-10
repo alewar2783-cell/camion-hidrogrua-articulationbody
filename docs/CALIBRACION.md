@@ -231,3 +231,15 @@ Con 27.5° se cumple el objetivo del spec (unos 25°) sin tocar los valores del 
 
 `Dump_SlowTilt_EmptiesBedAndGateCloses` falló una vez en siete corridas con `Load_2` en (-0.57, 0.79, -4.07): un cubo apoyado sobre otro en el corralón. El spec solo pide que las cargas caigan al corralón y que la compuerta se abra y se cierre; un cubo sobre otro es físicamente válido, así que el criterio "sin apilar" (`y < 0.5`) era más estricto que el spec. No se tocó la física. Ahora cada carga de la caja debe quedar detrás de `BedHinge.z` y por debajo de 1.0 m (dos alturas de cubo más margen: admite una segunda capa y excluye seguir sobre el piso de la caja, cuyo tope está en 0.85 m). Lo que detecta una compuerta trabada es la aserción de compuerta menor que 5° al bajar la caja.
 
+
+## 10. Verificación manual en el Editor (2026-11-10)
+
+Prueba hecha con el proyecto abierto en el Editor de Unity (6000.3.14f1) y el Unity MCP, sobre la escena `Main.unity` guardada, en Play mode. Los objetivos se escribieron con `JointAxis.SetTarget` y la caja con el mismo `JointAxis.Step` que usa el teclado (20°/s); no se simuló el teclado físico ni el mouse. No se tocó ningún valor ni ningún archivo del proyecto.
+
+- **Inicio:** la escena guardada abre con la grúa plegada (pluma 67.9° real para 70° pedidos), sin que el brazo atraviese la caja. La consola no muestra errores del proyecto, solo advertencias de los paquetes de IA de Unity.
+- **Panel:** las seis filas muestran `Target` y `Real` (por ejemplo `Pluma principal | Target: 70.0° | Real: 67.9°`), con el botón "Reiniciar Escena" y la leyenda de teclas. El reinicio (`SceneResetter.Reload`) devuelve los cubos a sus posiciones y la grúa a la pose plegada.
+- **Carga de un cubo desde el suelo, solo con física:** con la secuencia torre -76.6°, telescópico 1.0 m, secundario -83.2° (pluma alta), pluma 42° y luego 31.2°, la pinza queda a ambos lados del cubo sin tocarlo. Al cerrar, los dedos frenan contra el cubo (`Real` 0.107 a 0.21 m para un `Target` de 0.35 m) y al subir la pluma a 55° el cubo sube con la pinza (cabezal a 2.90 m, cubo a 2.06 m).
+- **Traslado y depósito:** con la torre en 0°, el telescópico en 0 y el secundario en -105°, el cubo queda sobre la caja y al abrir la pinza cae y se detiene a 1.10 m de altura, sin velocidad.
+- **Volcado a 20°/s con un solo cubo:** la caja llega a 54° (objetivo 55°), la compuerta se abre sola hasta 72.4° y el cubo sale y queda en el suelo a 4.2 m detrás del camión. Al bajar la caja a 0°, la compuerta vuelve a 1.6° (menos de 5°).
+- **Hallazgo de uso:** aplicar la pose `GraspApproach` de golpe desde `Stowed` hace que los dedos barran los cubos a baja altura: los cinco cubos quedaron desparramados hasta 4 m. Con el orden torre, telescópico, secundario y recién después pluma, los cubos no se tocan. Está anotado en `docs/GUION_VIDEO.md`.
+- **No verificado aquí:** teclado físico y mouse, orbitar con el botón derecho, rendimiento en el navegador y la prueba con los 5 cubos juntos (solo se movió el primero). Las capturas de la vista de cámara dejaron de funcionar en Play mode ("Failed to render scene preview"); la interfaz se verificó con `ScreenCapture`.
