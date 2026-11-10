@@ -176,8 +176,8 @@ namespace Truck
             public static readonly Vector3 TowerPivot = new Vector3(0f, 0.7f, 1.4f);
             public const float TowerHeight = 1.5f;
             public const float BoomLength = 3f;
-            public const float JibLength = 2f;
-            public const float TelescopeLength = 1f;
+            public const float JibLength = 1.5f;
+            public const float TelescopeLength = 0.5f;
             public const float GripperOpening = 0.8f;
 
             /// <summary>
@@ -196,6 +196,23 @@ namespace Truck
             public const float TailgateHeight = 0.9f;
             public static readonly Vector3 TailgateHinge =
                 new Vector3(0f, BedHinge.y + BedWallHeight, BedHinge.z);
+        }
+
+        /// <summary>
+        /// Target sets in ControlId order (Torre, Pluma, BrazoSecundario, Telescopico, Pinza,
+        /// Caja). Angles in degrees, lengths in meters. Found by forward kinematics and checked
+        /// in play mode; see docs/CALIBRACION.md.
+        /// </summary>
+        public static class Poses
+        {
+            /// <summary>Gripper head over the ground, about 4.5 m right of the truck.</summary>
+            public static readonly float[] GroundReach = { -90f, 32f, -81f, 1f, 0f, 0f };
+
+            /// <summary>Gripper head about 1 m over the center of the bed floor.</summary>
+            public static readonly float[] BedReach = { 0f, 38f, -105f, 0f, 0f, 0f };
+
+            /// <summary>Boom raised and jib folded back: clears the bed while it tilts.</summary>
+            public static readonly float[] Stowed = { 0f, 70f, -45f, 0f, 0f, 0f };
         }
 
         public static class Materials

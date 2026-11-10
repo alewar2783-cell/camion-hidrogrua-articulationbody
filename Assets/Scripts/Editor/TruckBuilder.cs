@@ -43,11 +43,52 @@ namespace Truck
                 }
             }
 
+            if (mode == BuildMode.Full)
+            {
+                WireControls(root, nodes);
+            }
+
             AssetDatabase.SaveAssets();
             root.SetActive(true);
             // Set after activation: the flag is ignored while the articulation does not exist yet.
             rootBody.immovable = true;
             return root;
+        }
+
+        // The first body of a control is the primary one; a second body is driven in mirror
+        // (the gripper fingers move in opposite directions).
+        private static void WireControls(GameObject root, Dictionary<BodyId, Transform> nodes)
+        {
+            var axes = new JointAxis[TruckSpec.Controls.Length];
+            foreach (ControlSpec control in TruckSpec.Controls)
+            {
+                ArticulationBody primary = null;
+                ArticulationBody mirror = null;
+                foreach (BodySpec spec in TruckSpec.Bodies)
+                {
+                    if (spec.Control != control.Id)
+                    {
+                        continue;
+                    }
+
+                    var body = nodes[spec.Id].GetComponent<ArticulationBody>();
+                    if (primary == null)
+                    {
+                        primary = body;
+                    }
+                    else
+                    {
+                        mirror = body;
+                    }
+                }
+
+                JointAxis axis = root.AddComponent<JointAxis>();
+                axis.Initialize(control, primary, mirror);
+                axes[(int)control.Id] = axis;
+            }
+
+            root.AddComponent<SimulatorController>().Initialize(axes);
+            root.AddComponent<SceneResetter>();
         }
 
         [MenuItem("Tools/Truck/Build Scene (No Drives)")]
