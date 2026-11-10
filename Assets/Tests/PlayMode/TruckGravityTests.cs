@@ -142,12 +142,12 @@ namespace Truck.Tests
             foreach (string fingerName in new[] { "Visual_DedoIzquierdo", "Visual_DedoDerecho" })
             {
                 AssertMaterial(FindChild(root, fingerName), TruckSpec.Materials.GripDynamicFriction,
-                    TruckSpec.Materials.GripStaticFriction, PhysicsMaterialCombine.Maximum);
+                    TruckSpec.Materials.GripStaticFriction, TruckSpec.Materials.GripCombine);
             }
 
             AssertMaterial(FindChild(root, "Visual_PisoCaja"),
                 TruckSpec.Materials.SteelDynamicFriction, TruckSpec.Materials.SteelStaticFriction,
-                PhysicsMaterialCombine.Average);
+                TruckSpec.Materials.SteelCombine);
         }
 
         private static void AssertMaterial(Transform visual, float dynamicFriction,

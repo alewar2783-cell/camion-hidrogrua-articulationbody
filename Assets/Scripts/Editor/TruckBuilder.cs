@@ -20,9 +20,11 @@ namespace Truck
         {
             Remove(RootName);
             Remove(TruckLoadsFactory.EnvironmentName);
+            Remove(TruckLoadsFactory.LoadsRootName);
 
             TruckLoadsFactory.CreateGround();
             (PhysicsMaterial grip, PhysicsMaterial steel) = TruckLoadsFactory.CreateMaterials();
+            TruckLoadsFactory.CreateLoads(grip);
 
             // The articulation is created in one go when the root is activated, so the solver
             // never sees a half-built hierarchy.

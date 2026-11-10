@@ -1,6 +1,6 @@
 # Calibración
 
-Registro de los valores que se ajustaron respecto de la Tabla Maestra y de las decisiones de física. Se actualiza en cada tarea de calibración. Estado actual: Tarea 4 (drives calibrados, controlador, poses de alcance y de reposo).
+Registro de los valores que se ajustaron respecto de la Tabla Maestra y de las decisiones de física. Se actualiza en cada tarea de calibración. Estado actual: Tarea 5 (cargas, agarre por fricción y descarga con compuerta pasiva).
 
 ## 1. Solver y cuerpos
 
@@ -61,12 +61,14 @@ Orden `Torre, Pluma, Secundario, Telescópico, Pinza, Caja` (grados y metros). L
 | `GroundReach` | -90 | 32 | -81 | 1.0 | 0 | 0 | cabezal en (4.42, 1.20, 1.39); objetivo (4.5, 1.25, 1.4); error 0.09 m; cabezal a 0.3° de la vertical |
 | `BedReach` | 0 | 38 | -105 | 0 | 0 | 0 | cabezal en (0.01, 2.03, -1.73); objetivo (0, 2.05, -1.75); error 0.03 m; cabezal a 0.7° de la vertical |
 | `Stowed` | 0 | 70 | -45 | 0 | 0 | 0 | cabezal en (0.00, 5.72, -1.59), velocidades < 0.005 m/s |
+| `GraspApproach` | -76.6 | 32 | -81 | 1.0 | 0 | 0 | sobre el primer cubo, dedos a unos 0.3 m del suelo (Tarea 5, sección 8) |
+| `GraspReach` | -76.6 | 31.2 | -83.2 | 1.0 | 0 | 0 | cabezal en (4.20, 1.08, 0.40) sobre `GroundSpawn[0]`, a 0.1° a 0.5° de la vertical, dedos 0.175 m sobre el suelo (Tarea 5, sección 8) |
 
 La tolerancia del test es 0.5 m y no se tocó. Los objetivos se calcularon con la cinemática directa y se corrigieron por el hundimiento de la pluma y el secundario (sección 5, 0.15 a 0.25 m de bajada del cabezal). Las alturas se eligieron para que los dedos queden unos 0.3 m sobre el suelo (`GroundReach`) o sobre el piso de la caja (`BedReach`): con el cabezal 0.2 m más bajo los dedos tocaban el suelo o el piso, el cabezal se inclinaba hasta 57° de la vertical y la torre se frenaba en -94°. La Tarea 5 baja desde esa pose hasta el cubo con la pluma. El piso de la caja está a 0.85 m, así que el cabezal sobre el centro queda a 1.2 m del piso.
 
 **Pose de reposo (`Stowed`).** Pluma elevada 70° y secundario plegado a -45° (elevación del telescópico +25°): el brazo apunta hacia atrás y arriba, a 5.7 m de altura. Con la pose de ceros el secundario queda tendido sobre la caja y el volteo de la caja lo choca: la caja sólo llegaba a 7.5° en lugar de 27.5°. Con `Stowed` y la caja a 55° la separación mínima entre cualquier collider de la grúa y de la caja (muestreo de esquinas, aristas y caras cada 0.25 s durante 4 s) es 0.73 m. El secundario queda a 80° de su tope (-125°); la pluma, a 5° del suyo (75°), llega a 67.9° por el hundimiento. Los tests de eje (`Axis_ReachesTarget`, `Axis_NeverExceedsLimits`) arrancan desde `Stowed` por la misma razón (ver sección 5).
 
-**Pendiente de las tareas siguientes.** Con el cabezal a e = -49° (`GroundReach`) el swing necesario respecto del centro es 19°, dentro del cono de ±40°; en `BedReach` (e = -67°) está en el borde del cono (-70°). Si el agarre de la Tarea 5 necesita otra elevación, ajustar `HeadCenterElevation`.
+**Cono de swing.** Con el cabezal a e = -49° (`GroundReach`) el swing necesario respecto del centro es 19°, dentro del cono de ±40°; en `BedReach` (e = -67°) está en el borde del cono (-70°). La Tarea 5 resolvió el agarre sin tocar `HeadCenterElevation` (sección 8.1).
 
 ## 4. Gravedad pura (sin drives)
 
@@ -100,7 +102,7 @@ Calibración de la raíz a la punta. Torque estático `τ = Σ m·g·brazo` en e
 | Secundario | 3000 N·m | 110 000 | 2.7° | 0.37 | ninguno |
 | Telescópico | 590 N (60 kg en vertical) | 60 000 | 0.013 m | 1.4 | ninguno |
 | Caja | 4900 N·m (250 kg a 1.75 m + 4 cubos de 8 kg a 2 m) | 250 000 | 2.4° | 0.51 | ninguno |
-| Dedos | sin carga estática; 8750 N de apriete con target 0.35 m contra un obstáculo | 20 000 | n/a | 3.5 (m = 5 kg) | ninguno aún; el `forceLimit` se baja en la Tarea 5 |
+| Dedos | sin carga estática; 8750 N de apriete con target 0.35 m contra un obstáculo | 300 (era 20 000) | n/a | 3.5 (m = 5 kg) | `forceLimit` bajado en la Tarea 5 (sección 8.2) |
 
 El torque estático consume entre 1% y 4% del `forceLimit`, así que el límite de fuerza nunca satura con carga normal. El peor caso de la pluma (5.1°) queda debajo de la tolerancia de 6° pero cerca; con la pluma plegada el hundimiento es menor.
 
@@ -128,15 +130,67 @@ Los tests de la Tarea 4 usan `Stowed` como base y cumplen las tolerancias del pl
 
 ## 6. Pendientes de calibración
 
-- Agarre: `forceLimit` de los dedos (spec: bajar a cientos de newtons), fricción cubo contra dedo.
-- Volcado: fricción del piso de la caja contra el cubo (resbala a ~25°) y apertura de la compuerta.
 - WebGL: revisar solver y `Fixed Timestep` en el navegador.
+- Volcado a velocidad de teclado: las cargas se amontonan detrás de la caja y la compuerta puede quedar apoyada sobre ellas (sección 8.4).
 
 ## 7. Materiales físicos
 
 | Material | Fricción dinámica | Fricción estática | Combine | Bounciness |
 |---|---|---|---|---|
-| `Mat_GomaPinza` (dedos y cubos) | 0.9 | 0.95 | Maximum | 0 |
+| `Mat_GomaPinza` (dedos y cubos) | 0.9 | 0.95 | Multiply (era Maximum, sección 8.3) | 0 |
 | `Mat_AceroCaja` (piso de la caja) | 0.25 | 0.3 | Average | 0 |
 
-Los valores viven en `TruckSpec.Materials`. Los materiales se crean en memoria en cada build (no son assets).
+Los valores viven en `TruckSpec.Materials`. Los materiales son assets en `Assets/PhysicsMaterials` y se reescriben desde el spec en cada build.
+
+## 8. Cargas, agarre y descarga (Tarea 5)
+
+Los cubos `Load_0..Load_4` (uno por punto de `GroundSpawn`) son `Rigidbody` de 8 kg, `ContinuousDynamic`, `Interpolate`, escala 0.5 y `Mat_GomaPinza`. Cuelgan de un objeto `Loads` aparte del camión, así que `Build` los borra y los vuelve a crear sin tocar el árbol de articulaciones. `TruckLoadsFactory.SpawnBedLoads()` mueve los cuatro primeros a `BedSpawn`. Las medidas salen de corridas de diagnóstico descartadas (no quedan en el repositorio).
+
+### 8.1 Pose de agarre (arrastres 1, 2 y 3)
+
+- **Barrido contra el cubo.** Ir a la pose de agarre con el cubo en su sitio lo empuja (el dedo lo arrastró de (4.2, 0.4) a (4.2, -0.1)) y el cabezal quedaba apoyado sobre el cubo con 25° a 35° de inclinación. Las poses de la Tarea 4 se midieron sin cubos. El test aparta el cubo, pasa por `Stowed` (arrastre 3), va a `GraspApproach` (5 s) y baja a `GraspReach` (3 s). Con esa secuencia el cabezal queda siempre en (4.20, 1.08, 0.40), a 0.1° a 0.5° de la vertical, en seis corridas.
+- **Descenso emparejado (arrastre 1).** Se baja con la pluma y el secundario a la vez: pluma 32° a 31.2° y secundario -81° a -83.2°. El cabezal pasa de y = 1.20 a 1.08 m. Elevación medida del telescópico: pluma 27.7° + secundario -84.2° = -56.5°, o sea 26.5° de swing sobre los 40° del cono. `HeadCenterElevation` no cambia.
+- **Por qué 0.12 m de descenso y no 0.28 m.** Con la altura de cinemática directa 0.04 m más baja (dedos a 0.0 a 0.1 m del suelo) las puntas rozaron el suelo y el cabezal se inclinó 28° a 33° y quedó trabado: el suelo agarra la goma de los dedos (fricción efectiva 0.9). Con los dedos a 0.175 m el cabezal cuelga vertical. El cubo mide 0.5 m y los dedos 0.6 m, así que lo cubren entre 0.175 y 0.5 m: 0.325 m de contacto.
+- **Cabezal sobre el cubo.** La pose se calculó con cinemática directa para (x, z) = `GroundSpawn[0]` = (4.2, 0.4), torre -76.6°. Medido: (4.20, 0.40), error menor que 0.01 m.
+- **Hundimiento (arrastre 2).** Los objetivos incluyen el hundimiento medido de la pluma: 31.2° pedido, 27.7° real (3.5°; el peor caso estimado en la sección 5 era 5.1°). No se tocó ninguna tolerancia: los tests de la Tarea 4 siguen con 6° y 0.08 m.
+- **`BedReach` no cambia.** Sigue en e = -67° (3° del borde del cono). No hace falta bajar en la caja: los dedos cuelgan 0.28 m sobre el piso (0.85 m) y un cubo soltado cae esa altura. Si una tarea futura necesita bajar 0.28 m con la pluma sola, son 5.3° de pluma, e = -72° y el cono (-70°) se excede en 2°; hay que bajar con el secundario o el telescópico.
+
+### 8.2 `forceLimit` de los dedos (arrastre 4)
+
+Con target 0.35 m contra un cubo de 0.5 m el error es 0.2 m por dedo y la rigidez de 25 000 N/m daría 5000 N. Se midió con el cubo agarrado: 1.5 s de cierre y luego 15° de pluma (3 s). `gap` es la luz entre las caras internas de los dedos (0.5 = sin interferencia).
+
+| `forceLimit` (N) | `gap` sostenido (m) | Interferencia | Elevación del cubo (m) | Deriva cubo-cabezal (m) |
+|---|---|---|---|---|
+| 20 000 (Tabla Maestra) | 0.418 | 82 mm | 1.16 | 0.00 |
+| 2000 | 0.444 a 0.468 | 32 a 56 mm | 1.16 | 0.00 |
+| 1500 | 0.483 | 17 mm | 1.16 | 0.00 |
+| 1000 | 0.493 | 7 mm | 1.14 | 0.02 |
+| 700 | 0.495 a 0.498 | 2 a 5 mm | 1.15 | 0.00 |
+| 500 | 0.499 a 0.500 | ninguna | 1.14 | 0.02 |
+| **300 (elegido)** | **0.499 a 0.500** | **ninguna** | **1.15** | **0.00** |
+| 150 | 0.500 | ninguna | 1.15 | 0.00 |
+| 100 | 0.500 | ninguna | 1.13 | 0.03 |
+
+Se eligió 300 N porque queda 2.3 veces por debajo del primer valor con interferencia visible (700 N) y la fricción lo sostiene con sobra: el peso es 78 N y dos caras con fricción 0.81 a 300 N dan 486 N (6 veces). El cubo se mantuvo agarrado hasta 100 N. Con la fuerza limitada el cierre no centra el cubo: queda en equilibrio indiferente y se corre hasta que un dedo llega a su tope abierto (`Real` de un dedo en 0 y del otro en 0.30 m); no afecta al agarre. Con el apriete bajo el cubo se inclina entre 10° y 15° al subir (el agarre queda unos 0.1 m sobre su centro de masa); con 2000 N la inclinación es menor que 3°, pero hay interferencia. El test del agarre exige `gap` mayor o igual que 0.48 m. Con los dedos cerrados sin carga la velocidad máxima de cualquier cuerpo es 2.4 m/s (límite del test: 5 m/s) y el dedo izquierdo llega a 0.350 m.
+
+### 8.3 Fricción (volcado)
+
+Con los valores del spec el cubo no resbalaba sobre el piso de acero antes de 40°: un cubo solo sobre la caja, con rampa de 3°/s, no se movió hasta el final del ensayo (14 s, 42° pedidos, unos 40° reales), y con la caja subiendo a 20°/s las cargas empezaron a deslizar a 43.6°. La causa no es el valor del acero: con `Mat_GomaPinza` en `Maximum`, el modo de mayor prioridad, la goma gana en todo par y `Mat_AceroCaja` no interviene. Cambiar solo `Mat_AceroCaja` no habría servido.
+
+Cambio: `Mat_GomaPinza` pasa a `Multiply` (mismas fricciones 0.9 y 0.95) y `Mat_AceroCaja` conserva 0.25 y 0.3 con `Average`. Medido con un cubo solo y rampa de 3°/s, variando la fricción del piso (para mostrar la sensibilidad):
+
+| Piso de acero (estática = dinámica salvo el spec) | Resbala a (real) |
+|---|---|
+| 0.05 | 7.3° |
+| 0.2 | 21.5° |
+| 0.25 dinámica y 0.3 estática (spec) | 27.5° |
+| 0.35 | 33.1° |
+| 0.5 | más de 40° |
+
+Con 27.5° se cumple el objetivo del spec (unos 25°) sin tocar los valores del acero. Entre dedo y cubo la fricción pasa a 0.81 dinámica y 0.90 estática, suficiente según 8.2. Contra el suelo y las paredes (sin material) queda en 0.54. El test `Build_PhysicsMaterials_ArePersistedAssetsWithSpecValues` (Tarea 3) ahora lee los modos desde `TruckSpec.Materials`.
+
+### 8.4 Volcado y compuerta
+
+- Los tests de volcado ponen el target de `Caja` en 45° de una vez, como pide el plan. La caja llega a unos 47° en 0.5 s, las cargas salen disparadas (hasta y = 2.9 m) y terminan en el suelo detrás de la caja; Con la configuración final la compuerta llega hasta 70.1° (81.4° con el material del spec), los cuatro cubos de la caja quedan en el suelo a z = -4.1 y -5.3 m y la compuerta vuelve a 0.00° al bajar la caja. El quinto cubo no se mueve del suelo.
+- **Limitación a velocidad de teclado (20°/s).** Subiendo la caja de a poco, las cargas empiezan a deslizar a unos 30° a 36° y chocan con la compuerta, que cuelga unos 0.6 m detrás de la bisagra, y caen al pie de la caja en dos capas (suelo y encima). La compuerta queda a 64° a 75° apoyada en esa pila y, al bajar la caja, se queda abierta (34° a 53°) hasta que se quitan las cargas. Ocurre igual con 45° y con 55°, y separar las filas de `BedSpawn` no lo cambia. En un camión real el camión avanza; acá se resuelve con el reinicio de escena. Queda como limitación conocida para la Tarea 6 y la verificación manual.
+- La compuerta se abre sola (gravedad y empuje de las cargas) en todos los casos medidos; no hizo falta modificar su geometría ni su amortiguamiento.

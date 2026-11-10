@@ -123,10 +123,10 @@ namespace Truck
             new BodySpec(BodyId.CabezalPinza, "Cabezal_Pinza", BodyId.TramoTelescopico,
                 JointKind.Spherical, 15f, Vector3.zero, -40f, 40f, 0f, 25f, 0f, true, null),
             new BodySpec(BodyId.DedoIzquierdo, "Dedo_Izquierdo", BodyId.CabezalPinza,
-                JointKind.Prismatic, 5f, Vector3.right, 0f, 0.35f, 25000f, 2500f, 20000f,
+                JointKind.Prismatic, 5f, Vector3.right, 0f, 0.35f, 25000f, 2500f, 300f,
                 false, ControlId.Pinza),
             new BodySpec(BodyId.DedoDerecho, "Dedo_Derecho", BodyId.CabezalPinza,
-                JointKind.Prismatic, 5f, Vector3.right, -0.35f, 0f, 25000f, 2500f, 20000f,
+                JointKind.Prismatic, 5f, Vector3.right, -0.35f, 0f, 25000f, 2500f, 300f,
                 false, ControlId.Pinza),
             new BodySpec(BodyId.CajaVolcadora, "Caja_Volcadora", BodyId.ChasisRoot,
                 JointKind.Revolute, 250f, Vector3.right, 0f, 55f, 120000f, 12000f, 250000f,
@@ -208,6 +208,12 @@ namespace Truck
             /// <summary>Gripper head over the ground, about 4.5 m right of the truck.</summary>
             public static readonly float[] GroundReach = { -90f, 32f, -81f, 1f, 0f, 0f };
 
+            /// <summary>Hover over the first ground cube, fingers well above the ground.</summary>
+            public static readonly float[] GraspApproach = { -76.6f, 32f, -81f, 1f, 0f, 0f };
+
+            /// <summary>Descent from GraspApproach: fingers hang just above the ground.</summary>
+            public static readonly float[] GraspReach = { -76.6f, 31.2f, -83.2f, 1f, 0f, 0f };
+
             /// <summary>Gripper head about 1 m over the center of the bed floor.</summary>
             public static readonly float[] BedReach = { 0f, 38f, -105f, 0f, 0f, 0f };
 
@@ -219,8 +225,14 @@ namespace Truck
         {
             public const float GripDynamicFriction = 0.9f;
             public const float GripStaticFriction = 0.95f;
+
+            // Multiply, not Maximum: with Maximum the grip material wins every pairing, so the
+            // cubes would not slide on the steel floor below 40 degrees (measured).
+            public const PhysicsMaterialCombine GripCombine = PhysicsMaterialCombine.Multiply;
+
             public const float SteelDynamicFriction = 0.25f;
             public const float SteelStaticFriction = 0.3f;
+            public const PhysicsMaterialCombine SteelCombine = PhysicsMaterialCombine.Average;
         }
 
         public static class Loads
