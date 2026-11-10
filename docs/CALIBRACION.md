@@ -224,3 +224,8 @@ Con 27.5° se cumple el objetivo del spec (unos 25°) sin tocar los valores del 
 - Paridad física con el Editor: agarre de un cubo y elevación (tres repeticiones), volcado a 20°/s con compuerta que se abre y se cierra, y reposo de las cargas 10 s. Si algo difiere, ajustar solver, `Fixed Timestep` o `forceLimit` y anotarlo aquí.
 - Rendimiento: cuadros por segundo con el solver de 16/4 iteraciones en un navegador con GPU real.
 - Ventana privada y carga desde el host definitivo (itch.io), con la compresión servida por el servidor o por el fallback.
+
+### Criterio de apilado en los tests de descarga (ronda de revisión 1)
+
+`Dump_SlowTilt_EmptiesBedAndGateCloses` falló una vez en siete corridas con `Load_2` en (-0.57, 0.79, -4.07): un cubo apoyado sobre otro en el corralón. El spec solo pide que las cargas caigan al corralón y que la compuerta se abra y se cierre; un cubo sobre otro es físicamente válido, así que el criterio "sin apilar" (`y < 0.5`) era más estricto que el spec. No se tocó la física. Ahora cada carga de la caja debe quedar detrás de `BedHinge.z` y por debajo de 1.0 m (dos alturas de cubo más margen: admite una segunda capa y excluye seguir sobre el piso de la caja, cuyo tope está en 0.85 m). Lo que detecta una compuerta trabada es la aserción de compuerta menor que 5° al bajar la caja.
+

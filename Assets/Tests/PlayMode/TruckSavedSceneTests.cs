@@ -1,5 +1,6 @@
 using System.Collections;
 using NUnit.Framework;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -16,6 +17,9 @@ namespace Truck.Tests
         private const string ScenePath = "Assets/Scenes/Main.unity";
         private const float SettleSeconds = 2f;
         private const float FramingTolerance = 0.01f;
+        private const float SliderTolerance = 1e-4f;
+        private const float ProbeFraction = 0.3f;
+        private const float WriteFraction = 0.6f;
         private const float MaxFramingAngleDegrees = 1f;
         private const float AngularToleranceDegrees = 3f;
         private const float LinearToleranceMeters = 0.03f;
@@ -60,6 +64,44 @@ namespace Truck.Tests
             }
         }
 
+        // Only a bound TelemetryUI (axis, slider and label all serialized) can echo a new target
+        // into the text and carry a slider change back to the axis.
+        [UnityTest]
+        public IEnumerator MainScene_Loaded_TelemetryFollowsAxesAndSliders()
+        {
+            yield return LoadMain();
+
+            GameObject root = GameObject.Find(TruckBuilder.RootName);
+            Assert.IsNotNull(root, "truck root");
+            JointAxis[] axes = root.GetComponent<SimulatorController>().Axes;
+            Slider[] sliders = GameObject.Find(TruckUiFactory.RootName)
+                .GetComponentsInChildren<Slider>();
+            foreach (JointAxis axis in axes)
+            {
+                axis.SetTarget(Mathf.Lerp(axis.Spec.Min, axis.Spec.Max, ProbeFraction));
+            }
+
+            yield return null;
+
+            foreach (Slider slider in sliders)
+            {
+                JointAxis axis = axes[(int)System.Enum.Parse(typeof(ControlId),
+                    slider.transform.parent.name.Substring(4))];
+                string label = axis.Control.ToString();
+                Assert.AreEqual(axis.Target, slider.value, SliderTolerance, label);
+                TMP_Text text = slider.transform.parent.GetComponentInChildren<TMP_Text>();
+                string expected = TelemetryUI.Format(axis.Spec.Label, axis.Target, 0f,
+                    axis.Spec.IsAngular);
+                int cut = expected.IndexOf(" | Real", System.StringComparison.Ordinal);
+                expected = expected.Substring(0, cut);
+                Assert.IsTrue(text.text.StartsWith(expected), text.text + " vs " + expected);
+
+                float written = Mathf.Lerp(axis.Spec.Min, axis.Spec.Max, WriteFraction);
+                slider.value = written;
+                Assert.AreEqual(written, axis.Target, SliderTolerance, label + " slider write");
+            }
+        }
+
         private static IEnumerator LoadMain()
         {
             yield return EditorSceneManager.LoadSceneInPlayMode(ScenePath,
@@ -77,12 +119,30 @@ namespace Truck.Tests
                 "event system");
             GameObject ui = GameObject.Find(TruckUiFactory.RootName);
             Assert.IsNotNull(ui, "ui root");
-            Assert.AreEqual(TruckSpec.Controls.Length, ui.GetComponentsInChildren<Slider>().Length,
-                "sliders");
+            Slider[] sliders = ui.GetComponentsInChildren<Slider>();
+            Assert.AreEqual(TruckSpec.Controls.Length, sliders.Length, "sliders");
+            foreach (Slider slider in sliders)
+            {
+                AssertSliderBinding(slider);
+            }
+
             Button[] buttons = ui.GetComponentsInChildren<Button>();
             Assert.AreEqual(1, buttons.Length, "buttons");
             Assert.AreEqual(1, buttons[0].onClick.GetPersistentEventCount());
             Assert.IsInstanceOf<SceneResetter>(buttons[0].onClick.GetPersistentTarget(0));
+        }
+
+        private static void AssertSliderBinding(Slider slider)
+        {
+            string rowName = slider.transform.parent.name;
+            Assert.IsTrue(rowName.StartsWith("Row_"), rowName);
+            var id = (ControlId)System.Enum.Parse(typeof(ControlId), rowName.Substring(4));
+            ControlSpec spec = TruckSpec.Get(id);
+            Assert.IsNotNull(slider.GetComponent<TelemetryUI>(), rowName + " telemetry");
+            Assert.AreEqual(spec.Min, slider.minValue, rowName);
+            Assert.AreEqual(spec.Max, slider.maxValue, rowName);
+            Assert.AreEqual(TruckSpec.Poses.Stowed[(int)id], slider.value, SliderTolerance,
+                rowName);
         }
 
         private static void AssertCamera()
@@ -96,6 +156,10 @@ namespace Truck.Tests
                 "camera looks at the focus");
             Assert.AreEqual(TruckBuilder.CameraDistance, toFocus.magnitude, FramingTolerance,
                 "camera distance");
+            Assert.AreEqual(0f, Mathf.DeltaAngle(TruckBuilder.CameraYaw, camera.eulerAngles.y),
+                FramingTolerance, "camera yaw");
+            Assert.AreEqual(0f, Mathf.DeltaAngle(TruckBuilder.CameraPitch, camera.eulerAngles.x),
+                FramingTolerance, "camera pitch");
             Assert.That(toFocus.magnitude,
                 Is.InRange(OrbitCamera.MinDistance, OrbitCamera.MaxDistance));
         }

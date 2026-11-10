@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 namespace Truck
 {
@@ -21,14 +22,41 @@ namespace Truck
 
             Scene scene = EditorSceneManager.OpenScene(MainScenePath, OpenSceneMode.Single);
             GameObject root = TruckBuilder.Build(BuildMode.Full);
+            AssertSingleRoots();
             EditorSceneManager.MarkSceneDirty(scene);
             if (!EditorSceneManager.SaveScene(scene))
             {
                 throw new InvalidOperationException("Could not save " + MainScenePath);
             }
 
-            AssetDatabase.SaveAssets();
             Debug.Log("Saved " + MainScenePath + " with " + root.name);
+        }
+
+        // Build removes the previous roots by name; a duplicate here would mean it did not.
+        private static void AssertSingleRoots()
+        {
+            foreach (string rootName in new[]
+            {
+                TruckBuilder.RootName, TruckUiFactory.RootName, TruckLoadsFactory.LoadsRootName,
+                TruckLoadsFactory.EnvironmentName, TruckBuilder.CameraName
+            })
+            {
+                int count = 0;
+                foreach (GameObject candidate in Object.FindObjectsByType<GameObject>(
+                    FindObjectsInactive.Include, FindObjectsSortMode.None))
+                {
+                    if (candidate.name == rootName)
+                    {
+                        count++;
+                    }
+                }
+
+                if (count != 1)
+                {
+                    throw new InvalidOperationException(rootName + " appears " + count
+                        + " times in the scene");
+                }
+            }
         }
     }
 }

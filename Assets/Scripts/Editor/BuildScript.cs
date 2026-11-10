@@ -46,11 +46,7 @@ namespace Truck
                 + summary.totalTime);
             if (summary.result != BuildResult.Succeeded)
             {
-                if (Application.isBatchMode)
-                {
-                    EditorApplication.Exit(1);
-                }
-
+                // In batch mode an exception from -executeMethod makes the exit code 1.
                 throw new InvalidOperationException("WebGL build " + summary.result);
             }
         }

@@ -23,7 +23,8 @@ namespace Truck.Tests
         private const float MaxPenetrationMeters = 0.02f;
         private const float MinCubeHeight = -0.1f;
         private const float MaxCubeDistance = 30f;
-        private const float GroundCubeMaxHeight = 0.5f;
+        // Two cube heights plus margin: a second layer in the yard, below the bed floor.
+        private const float YardMaxHeight = 1f;
         private const float ClosedSeconds = 3f;
         private const float MaxFingerSpeed = 5f;
         private const float LimitMargin = 0.01f;
@@ -417,7 +418,8 @@ namespace Truck.Tests
             }
         }
 
-        // A bed load must be out of the bed and lying on the ground, not piled on another load.
+        // A bed load must be out of the bed, behind its rear edge, in the yard. A cube resting on
+        // another one is valid, so the bound allows a second layer but not the bed floor.
         private static void AssertBedLoadsOnGroundBehindBed()
         {
             float rearEdge = TruckSpec.Geometry.BedHinge.z;
@@ -425,7 +427,7 @@ namespace Truck.Tests
             {
                 Vector3 position = FindLoad(i).position;
                 Assert.Less(position.z, rearEdge, "Load_" + i + " at " + position);
-                Assert.Less(position.y, GroundCubeMaxHeight, "Load_" + i + " at " + position);
+                Assert.Less(position.y, YardMaxHeight, "Load_" + i + " at " + position);
             }
         }
 
