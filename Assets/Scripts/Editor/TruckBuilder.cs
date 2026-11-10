@@ -16,10 +16,10 @@ namespace Truck
         public const string RootName = "Truck";
         public const string CameraName = "Main Camera";
 
-        private static readonly Vector3 CameraFocus = new Vector3(2f, 1f, -1f);
-        private const float CameraYaw = -35f;
-        private const float CameraPitch = 28f;
-        private const float CameraDistance = 16f;
+        public static readonly Vector3 CameraFocus = new Vector3(2f, 1f, -1f);
+        public const float CameraYaw = -35f;
+        public const float CameraPitch = 28f;
+        public const float CameraDistance = 16f;
 
         /// <summary>Destroys any previous truck and environment, then builds a new truck.</summary>
         public static GameObject Build(BuildMode mode)
@@ -66,11 +66,13 @@ namespace Truck
             SetupCamera();
             if (axes != null)
             {
-                // Also after activation: joint positions need the articulation. Starting stowed
-                // keeps the jib from lying across the bed and swinging up through its walls.
-                foreach (JointAxis axis in axes)
+                if (Application.isPlaying)
                 {
-                    axis.SnapToTarget();
+                    // Edit mode has no running articulation; JointAxis.Start snaps there.
+                    foreach (JointAxis axis in axes)
+                    {
+                        axis.SnapToTarget();
+                    }
                 }
 
                 TruckUiFactory.Create(axes, root.GetComponent<SceneResetter>());

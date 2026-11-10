@@ -33,7 +33,8 @@ namespace Truck
         private const float LegendFontSize = 20f;
         private const string LegendTitle = "Controles (- / +)";
         private const string LegendFooter =
-            "Reiniciar: Retroceso o P\nCámara: clic derecho + arrastrar, rueda para zoom";
+            "Reiniciar: " + SceneResetter.KeysLabel
+            + "\nCámara: clic derecho + arrastrar, rueda para zoom";
 
         private const string BackgroundSprite = "UI/Skin/Background.psd";
         private const string SliderSprite = "UI/Skin/UISprite.psd";

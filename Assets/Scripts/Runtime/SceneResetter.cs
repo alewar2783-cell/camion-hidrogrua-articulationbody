@@ -9,6 +9,9 @@ namespace Truck
 {
     public sealed class SceneResetter : MonoBehaviour
     {
+        /// <summary>Display text of the keys checked in Update.</summary>
+        public const string KeysLabel = "Retroceso o P";
+
         public static void Reload()
         {
             Scene scene = SceneManager.GetActiveScene();

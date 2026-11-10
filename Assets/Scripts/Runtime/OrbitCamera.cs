@@ -14,10 +14,11 @@ namespace Truck
         private const float DegreesPerPixel = 0.25f;
         private const float ZoomFraction = 0.1f;
 
-        private Vector3 _focus;
-        private float _yaw;
-        private float _pitch;
-        private float _distance = MinDistance;
+        // Serialized so that a framing set at build time in the Editor survives into Play.
+        [SerializeField] private Vector3 _focus;
+        [SerializeField] private float _yaw;
+        [SerializeField] private float _pitch;
+        [SerializeField] private float _distance = MinDistance;
 
         public static float ClampPitch(float degrees)
         {

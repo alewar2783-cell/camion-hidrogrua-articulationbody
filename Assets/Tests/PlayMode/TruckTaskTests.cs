@@ -33,6 +33,11 @@ namespace Truck.Tests
         private const float MinGateOpenDegrees = 30f;
         private const float MaxGateClosedDegrees = 5f;
         private const float GateCloseSeconds = 6f;
+        private const float SliderTolerance = 1e-4f;
+        private const float StartSnapDegrees = 30f;
+        private const float StartSnapToleranceDegrees = 10f;
+        private const float FramingTolerance = 0.01f;
+        private const float MaxFramingAngleDegrees = 1f;
         private const float InitialPoseSeconds = 2f;
         private const float InitialAngularToleranceDegrees = 3f;
         private const float InitialLinearToleranceMeters = 0.03f;
@@ -67,6 +72,7 @@ namespace Truck.Tests
             SimulatorController controller = root.GetComponent<SimulatorController>();
             ArticulationBody[] bodies = root.GetComponentsInChildren<ArticulationBody>();
 
+            yield return null;
             float maxSpeed = 0f;
             float maxExcess = float.MinValue;
             float start = Time.time;
@@ -107,6 +113,26 @@ namespace Truck.Tests
             Assert.Less(maxSpeed, MaxInitialSpeed, "max body speed once settled");
         }
 
+        // A saved scene never carries joint positions, so JointAxis.Start must place the
+        // articulation itself. A new axis is attached to a running body and must jump to its
+        // default target within one frame; the drive alone could not move that far.
+        [UnityTest]
+        public IEnumerator JointAxis_Start_SnapsRunningArticulationToDefaultTarget()
+        {
+            GameObject root = TruckBuilder.Build(BuildMode.Full);
+            yield return null;
+            root.GetComponent<SimulatorController>().GetAxis(ControlId.Pluma).enabled = false;
+            ArticulationBody boom = FindBody(root, BodyId.BrazoPrincipal);
+
+            var host = new GameObject("ExtraAxis");
+            JointAxis axis = host.AddComponent<JointAxis>();
+            axis.Initialize(TruckSpec.Get(ControlId.Pluma), boom, null, StartSnapDegrees);
+            yield return null;
+
+            Assert.AreEqual(StartSnapDegrees, axis.Real, StartSnapToleranceDegrees);
+            Object.Destroy(host);
+        }
+
         [UnityTest]
         public IEnumerator Ui_Build_CreatesSixSlidersAndResetButton()
         {
@@ -124,13 +150,17 @@ namespace Truck.Tests
                 string label = spec.Id.ToString();
                 Assert.AreEqual(spec.Min, sliders[i].minValue, label);
                 Assert.AreEqual(spec.Max, sliders[i].maxValue, label);
-                Assert.AreEqual(TruckSpec.Poses.Stowed[i], sliders[i].value, 1e-4f, label);
+                Assert.AreEqual(TruckSpec.Poses.Stowed[i], sliders[i].value, SliderTolerance,
+                    label);
                 Assert.AreEqual(Navigation.Mode.None, sliders[i].navigation.mode, label);
             }
 
             Button[] buttons = ui.GetComponentsInChildren<Button>();
             Assert.AreEqual(1, buttons.Length);
             Assert.AreEqual(1, buttons[0].onClick.GetPersistentEventCount());
+            Assert.IsInstanceOf<SceneResetter>(buttons[0].onClick.GetPersistentTarget(0));
+            Assert.AreEqual(nameof(SceneResetter.ReloadScene),
+                buttons[0].onClick.GetPersistentMethodName(0));
             Assert.AreEqual(TruckUiFactory.ResetButtonLabel,
                 buttons[0].GetComponentInChildren<TMP_Text>().text);
 
@@ -156,6 +186,24 @@ namespace Truck.Tests
         }
 
         [UnityTest]
+        public IEnumerator Build_Camera_FramesTruckAfterFirstFrame()
+        {
+            TruckBuilder.Build(BuildMode.Full);
+            yield return null;
+            yield return null;
+
+            Transform camera = Camera.main.transform;
+            Vector3 toFocus = TruckBuilder.CameraFocus - camera.position;
+            Assert.Less(Vector3.Angle(camera.forward, toFocus), MaxFramingAngleDegrees,
+                "camera looks at the focus");
+            Assert.AreEqual(TruckBuilder.CameraDistance, toFocus.magnitude,
+                FramingTolerance, "camera distance");
+            Assert.That(toFocus.magnitude,
+                Is.InRange(OrbitCamera.MinDistance, OrbitCamera.MaxDistance));
+            Assert.AreEqual(TruckBuilder.CameraPitch, camera.eulerAngles.x, FramingTolerance, "pitch");
+        }
+
+        [UnityTest]
         public IEnumerator Ui_Telemetry_FollowsAxisAndSliderWritesTarget()
         {
             GameObject root = TruckBuilder.Build(BuildMode.Full);
@@ -168,12 +216,12 @@ namespace Truck.Tests
             boom.SetTarget(40f);
             yield return null;
 
-            Assert.AreEqual(40f, slider.value, 1e-4f, "slider follows keyboard target");
+            Assert.AreEqual(40f, slider.value, SliderTolerance, "slider follows keyboard target");
             Assert.IsTrue(label.text.StartsWith("Pluma principal | Target: 40.0° | Real: "),
                 label.text);
 
             slider.value = 25f;
-            Assert.AreEqual(25f, boom.Target, 1e-4f, "slider writes the target");
+            Assert.AreEqual(25f, boom.Target, SliderTolerance, "slider writes the target");
 
             EventSystem.current.SetSelectedGameObject(slider.gameObject);
             slider.GetComponent<TelemetryUI>().OnPointerUp(null);

@@ -66,7 +66,7 @@ namespace Truck
 
         /// <summary>
         /// Teleports the joints to the current target. Only valid once the articulation exists
-        /// (after its root is active); it avoids starting in a pose that collides.
+        /// (at runtime); it avoids starting in a pose that collides.
         /// </summary>
         public void SnapToTarget()
         {
@@ -95,6 +95,13 @@ namespace Truck
         public static float ToDisplay(bool isAngular, float jointPosition)
         {
             return isAngular ? jointPosition * Mathf.Rad2Deg : jointPosition;
+        }
+
+        // Joint positions are runtime articulation state and are never saved with a scene, so
+        // the stowed start is applied here, once the articulation exists.
+        private void Start()
+        {
+            SnapToTarget();
         }
 
         private void SnapBody(ArticulationBody body, float value)
