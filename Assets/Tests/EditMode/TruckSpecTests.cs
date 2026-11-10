@@ -91,5 +91,23 @@ namespace Truck.Tests
             Assert.AreEqual(max, control.Max, 1e-4f);
             Assert.AreEqual(speed, control.Speed, 1e-4f);
         }
+
+        [Test]
+        public void Get_EveryBodyId_ReturnsMatchingSpec()
+        {
+            foreach (BodyId id in System.Enum.GetValues(typeof(BodyId)))
+            {
+                Assert.AreEqual(id, TruckSpec.Get(id).Id);
+            }
+        }
+
+        [Test]
+        public void Get_EveryControlId_ReturnsMatchingSpec()
+        {
+            foreach (ControlId id in System.Enum.GetValues(typeof(ControlId)))
+            {
+                Assert.AreEqual(id, TruckSpec.Get(id).Id);
+            }
+        }
     }
 }

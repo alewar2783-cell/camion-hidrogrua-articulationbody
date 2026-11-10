@@ -50,5 +50,42 @@ namespace Truck.Tests
             Assert.AreEqual(-15f, JointAxis.ClampTarget(-40f, -15f, 75f));
             Assert.AreEqual(30f, JointAxis.ClampTarget(30f, -15f, 75f));
         }
+
+        [Test]
+        public void Step_NanInput_LeavesTargetUnchanged()
+        {
+            Assert.AreEqual(10f, JointAxis.Step(10f, float.NaN, 45f, 0.02f, -170f, 170f));
+        }
+
+        [Test]
+        public void Step_NanSpeed_LeavesTargetUnchanged()
+        {
+            Assert.AreEqual(10f, JointAxis.Step(10f, 1f, float.NaN, 0.02f, -170f, 170f));
+        }
+
+        [Test]
+        public void Step_NanDeltaTime_LeavesTargetUnchanged()
+        {
+            Assert.AreEqual(10f, JointAxis.Step(10f, 1f, 45f, float.NaN, -170f, 170f));
+        }
+
+        [Test]
+        public void SetTarget_Nan_LeavesTargetUnchanged()
+        {
+            var go = new GameObject("Axis");
+            try
+            {
+                var axis = go.AddComponent<JointAxis>();
+                axis.Initialize(TruckSpec.Get(ControlId.Torre), null, null, 12f);
+
+                axis.SetTarget(float.NaN);
+
+                Assert.AreEqual(12f, axis.Target);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
     }
 }
