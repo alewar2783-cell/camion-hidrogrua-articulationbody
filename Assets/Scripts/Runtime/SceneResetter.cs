@@ -41,6 +41,11 @@ namespace Truck
 
         private void Update()
         {
+            if (!SimulatorController.ShouldProcessInput(Application.isFocused))
+            {
+                return;
+            }
+
             Keyboard keyboard = Keyboard.current;
             if (keyboard == null)
             {
