@@ -130,7 +130,7 @@ Los tests de la Tarea 4 usan `Stowed` como base y cumplen las tolerancias del pl
 
 ## 6. Pendientes de calibración
 
-- WebGL: revisar solver y `Fixed Timestep` en el navegador.
+- WebGL: revisar solver y `Fixed Timestep` en el navegador (ver sección 9).
 
 ## 7. Materiales físicos
 
@@ -198,3 +198,29 @@ Con 27.5° se cumple el objetivo del spec (unos 25°) sin tocar los valores del 
 - **Consecuencia.** Las cargas del suelo y el cubo que se empuja con los dedos deslizan con facilidad (0.09). El agarre no cambia porque depende de la fricción dedo-cubo (0.81). Los tests de agarre y de reposo (10 s) siguen en verde.
 - **Criterio de los tests de descarga.** Se evalúan solo las cuatro cargas de la caja (índices 0 a 3): cada una debe quedar detrás del borde trasero (z menor que la bisagra) y con el centro por debajo de 0.5 m (apoyada en el suelo, no encima de otra: una carga apilada queda por encima de 0.7 m). `Dump_SlowTilt_EmptiesBedAndGateCloses` sube la caja a 20°/s con un incremento por cuadro (`JointAxis.Step`), espera, aplica el criterio, baja a 20°/s y exige compuerta menor que 5°.
 - La compuerta se abre sola (gravedad y empuje de las cargas) en todos los casos medidos; no hizo falta modificar su geometría ni su amortiguamiento.
+
+## 9. WebGL (Tarea 7)
+
+### Escena y configuración
+
+- `Tools/Truck/Build And Save Main Scene` (`TruckSceneSaver.BuildAndSave`, también por línea de comandos: `-batchmode -quit -executeMethod Truck.TruckSceneSaver.BuildAndSave`) abre `Assets/Scenes/Main.unity`, ejecuta `TruckBuilder.Build(BuildMode.Full)` en Edit mode y guarda. Es idempotente: dos corridas dejan un solo `Truck`, `Interface`/Canvas, EventSystem, `Main Camera`, `Loads` y `Environment`. No aparece ninguna advertencia de `jointPosition` porque el ajuste a la pose plegada ocurre en `JointAxis.Start` (runtime). No hizo falta cambiar el código de runtime: el test `TruckSavedSceneTests` carga la escena guardada y confirma que nada se perdió al serializar.
+- `Tools/Truck/Configure WebGL` (`BuildScript.ConfigureWebGl`) deja reproducible desde un clon limpio: nombre de producto `Camion Hidrogrua`, compresión Gzip, Decompression Fallback activado, Data caching desactivado y `Main` como única escena de Build Settings.
+- `Tools/Truck/Build WebGL` (`BuildScript.BuildWebGl`) compila a `Build/WebGL` (ignorada por Git): `Unity.exe -batchmode -quit -projectPath <proyecto> -buildTarget WebGL -executeMethod Truck.BuildScript.BuildWebGl -logFile <log>`.
+
+### Resultado de la primera build
+
+- Tiempo: 9 min 57 s de compilación (13 min 47 s en total con el cambio de plataforma y la reimportación). Resultado `Succeeded`, sin errores de compilación.
+- Tamaño: 19.4 MB (`.wasm.unityweb` 12.0 MB, `.data.unityweb` 7.2 MB, `.framework.js.unityweb` 89 KB, `.loader.js` 40 KB, `index.html` 5.6 KB).
+- Servidor local: `python -m http.server 8765 --bind 127.0.0.1` dentro de `Build/WebGL`. Python no manda `Content-Encoding`, así que corre con el Decompression Fallback (el caso de itch.io).
+- Chrome embebido: carga completa en unos 15 s, sin errores de JavaScript. En la consola aparecen tres líneas `ERROR: Shader Hidden/... is not supported on this GPU` (CoreCopy, StencilDitherMaskSeed, HDRDebugView; shaders internos de URP que el proyecto no usa) y avisos `INVALID_ENUM: getInternalformatParameter`; el render es correcto. Se ve la escena completa (camión, 5 cubos, panel de 6 sliders, botón y leyenda) y la pose plegada inicial (pluma 70°, secundario -45°).
+- Verificado en el navegador: arrastrar el slider de la torre mueve la grúa (Target 98.6°, Real 98.6°). Un `contextmenu` y un `keydown` de flecha sobre el canvas llegan con `defaultPrevented = true`; a 1024x768 la página no tiene scroll (`scrollHeight` igual a `innerHeight`).
+- Al compilar, Unity migró `Assets/Settings/*.asset` (URP asset version 13 y valores de prefiltrado de variantes) y agregó el define `SENTIS_ANALYTICS_ENABLED` a `ProjectSettings`; esos cambios se versionaron con la build.
+
+### Pendiente de verificar en el navegador
+
+- Teclado real (mantener apretadas las teclas): los eventos sintéticos de la herramienta no sostienen `isPressed`, así que los 6 pares de teclas, el reinicio con Retroceso/P y la velocidad de cada eje quedan sin probar.
+- Click derecho + arrastrar para orbitar y rueda para zoom, sin menú contextual en la ventana real.
+- Flechas (caja volcadora) sin desplazar la página, también con una ventana más chica que el alto del canvas.
+- Paridad física con el Editor: agarre de un cubo y elevación (tres repeticiones), volcado a 20°/s con compuerta que se abre y se cierra, y reposo de las cargas 10 s. Si algo difiere, ajustar solver, `Fixed Timestep` o `forceLimit` y anotarlo aquí.
+- Rendimiento: cuadros por segundo con el solver de 16/4 iteraciones en un navegador con GPU real.
+- Ventana privada y carga desde el host definitivo (itch.io), con la compresión servida por el servidor o por el fallback.
