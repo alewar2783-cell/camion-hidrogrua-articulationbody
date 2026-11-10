@@ -19,7 +19,7 @@ namespace Truck.Tests
         private const float MaxPenetrationMeters = 0.02f;
         private const float MinCubeHeight = -0.1f;
         private const float MaxCubeDistance = 30f;
-        private const float GroundCubeMaxHeight = 0.35f;
+        private const float GroundCubeMaxHeight = 0.5f;
         private const float ClosedSeconds = 3f;
         private const float MaxFingerSpeed = 5f;
         private const float LimitMargin = 0.01f;
@@ -184,14 +184,28 @@ namespace Truck.Tests
             }
 
             Assert.GreaterOrEqual(maxGate, MinGateOpenDegrees, "max gate angle");
-            float rearEdge = TruckSpec.Geometry.BedHinge.z;
-            for (int i = 0; i < TruckSpec.Loads.GroundSpawn.Length; i++)
-            {
-                Vector3 position = FindLoad(i).position;
-                bool behind = position.z < rearEdge;
-                bool onGround = position.y < GroundCubeMaxHeight;
-                Assert.IsTrue(behind || onGround, "Load_" + i + " at " + position);
-            }
+            AssertBedLoadsOnGroundBehindBed();
+        }
+
+        [UnityTest]
+        public IEnumerator Dump_SlowTilt_EmptiesBedAndGateCloses()
+        {
+            GameObject root = TruckBuilder.Build(BuildMode.Full);
+            yield return Stow(root);
+            ArticulationBody gate = FindBody(root, BodyId.CompuertaTrasera);
+            JointAxis bed = root.GetComponent<SimulatorController>().GetAxis(ControlId.Caja);
+
+            TruckLoadsFactory.SpawnBedLoads();
+            yield return new WaitForSeconds(BedSettleSeconds);
+            yield return MoveBed(bed, bed.Spec.Max);
+            yield return new WaitForSeconds(DumpSeconds);
+
+            AssertBedLoadsOnGroundBehindBed();
+
+            yield return MoveBed(bed, 0f);
+            yield return new WaitForSeconds(GateCloseSeconds);
+
+            Assert.Less(gate.jointPosition[0] * Mathf.Rad2Deg, MaxGateClosedDegrees);
         }
 
         [UnityTest]
@@ -210,6 +224,31 @@ namespace Truck.Tests
             yield return new WaitForSeconds(GateCloseSeconds);
 
             Assert.Less(gate.jointPosition[0] * Mathf.Rad2Deg, MaxGateClosedDegrees);
+        }
+
+        // Moves the axis the way the keyboard does: one increment per frame at the spec speed.
+        private static IEnumerator MoveBed(JointAxis axis, float goal)
+        {
+            float direction = Mathf.Sign(goal - axis.Target);
+            while (!Mathf.Approximately(axis.Target, goal))
+            {
+                float next = JointAxis.Step(axis.Target, direction, axis.Spec.Speed,
+                    Time.deltaTime, axis.Spec.Min, axis.Spec.Max);
+                axis.SetTarget(direction > 0f ? Mathf.Min(next, goal) : Mathf.Max(next, goal));
+                yield return null;
+            }
+        }
+
+        // A bed load must be out of the bed and lying on the ground, not piled on another load.
+        private static void AssertBedLoadsOnGroundBehindBed()
+        {
+            float rearEdge = TruckSpec.Geometry.BedHinge.z;
+            for (int i = 0; i < TruckSpec.Loads.BedSpawn.Length; i++)
+            {
+                Vector3 position = FindLoad(i).position;
+                Assert.Less(position.z, rearEdge, "Load_" + i + " at " + position);
+                Assert.Less(position.y, GroundCubeMaxHeight, "Load_" + i + " at " + position);
+            }
         }
 
         // With every axis at zero the jib lies across the bed, so each test starts from an

@@ -77,11 +77,14 @@ namespace Truck
         public static GameObject CreateGround()
         {
             var environment = new GameObject(EnvironmentName);
+            PhysicsMaterial soil = TruckAssetStore.LoadOrCreatePhysicsMaterial("Mat_Suelo",
+                TruckSpec.Materials.GroundDynamicFriction, TruckSpec.Materials.GroundStaticFriction,
+                TruckSpec.Materials.GroundCombine);
 
             GameObject ground = TruckBodyFactory.CreateBox("Ground", environment.transform,
                 new Vector3(0f, -0.5f, 0f),
                 new Vector3(TruckSpec.Geometry.GroundSize, 1f, TruckSpec.Geometry.GroundSize),
-                new Color(0.42f, 0.5f, 0.36f), null);
+                new Color(0.42f, 0.5f, 0.36f), soil);
             ground.isStatic = true;
 
             Vector3 yard = TruckSpec.Geometry.YardCenter;

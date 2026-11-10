@@ -131,7 +131,6 @@ Los tests de la Tarea 4 usan `Stowed` como base y cumplen las tolerancias del pl
 ## 6. Pendientes de calibración
 
 - WebGL: revisar solver y `Fixed Timestep` en el navegador.
-- Volcado a velocidad de teclado: las cargas se amontonan detrás de la caja y la compuerta puede quedar apoyada sobre ellas (sección 8.4).
 
 ## 7. Materiales físicos
 
@@ -139,6 +138,7 @@ Los tests de la Tarea 4 usan `Stowed` como base y cumplen las tolerancias del pl
 |---|---|---|---|---|
 | `Mat_GomaPinza` (dedos y cubos) | 0.9 | 0.95 | Multiply (era Maximum, sección 8.3) | 0 |
 | `Mat_AceroCaja` (piso de la caja) | 0.25 | 0.3 | Average | 0 |
+| `Mat_Suelo` (suelo) | 0.1 | 0.1 | Average | 0 |
 
 Los valores viven en `TruckSpec.Materials`. Los materiales son assets en `Assets/PhysicsMaterials` y se reescriben desde el spec en cada build.
 
@@ -192,5 +192,9 @@ Con 27.5° se cumple el objetivo del spec (unos 25°) sin tocar los valores del 
 ### 8.4 Volcado y compuerta
 
 - Los tests de volcado ponen el target de `Caja` en 45° de una vez, como pide el plan. La caja llega a unos 47° en 0.5 s, las cargas salen disparadas (hasta y = 2.9 m) y terminan en el suelo detrás de la caja; Con la configuración final la compuerta llega hasta 70.1° (81.4° con el material del spec), los cuatro cubos de la caja quedan en el suelo a z = -4.1 y -5.3 m y la compuerta vuelve a 0.00° al bajar la caja. El quinto cubo no se mueve del suelo.
-- **Limitación a velocidad de teclado (20°/s).** Subiendo la caja de a poco, las cargas empiezan a deslizar a unos 30° a 36° y chocan con la compuerta, que cuelga unos 0.6 m detrás de la bisagra, y caen al pie de la caja en dos capas (suelo y encima). La compuerta queda a 64° a 75° apoyada en esa pila y, al bajar la caja, se queda abierta (34° a 53°) hasta que se quitan las cargas. Ocurre igual con 45° y con 55°, y separar las filas de `BedSpawn` no lo cambia. En un camión real el camión avanza; acá se resuelve con el reinicio de escena. Queda como limitación conocida para la Tarea 6 y la verificación manual.
+- **Volcado a velocidad de teclado (20°/s).** Con el suelo del spec (sin material, fricción efectiva 0.54 contra la goma) las cargas deslizaban a unos 30° a 36°, chocaban con la compuerta (que cuelga unos 0.6 m detrás de la bisagra) y caían al pie de la caja en dos capas (suelo y encima). La compuerta quedaba apoyada en la pila a 64° a 75° y, al bajar la caja, seguía abierta (34° a 53°) hasta el reinicio. Pasaba igual con 45° y con 55°, y separar las filas de `BedSpawn` no lo cambiaba. Los tests con el target en 45° de golpe lo ocultaban porque la caja gira en 0.5 s y lanza las cargas.
+- **Qué no sirvió.** Acortar la compuerta de 0.9 a 0.5 m: las cargas siguen cayendo juntas junto al chasis (z = -3.8 a -4.2) y la segunda fila queda encima de la primera (y = 0.65 a 0.70). Un suelo con fricción 0.3 (efectiva 0.27) tampoco.
+- **Qué sirvió: un material propio para el suelo** (`Mat_Suelo`, asset, `TruckSpec.Materials.Ground*`: fricción dinámica y estática 0.1, `Average`). Contra la goma (`Multiply`) da 0.09: las cargas que caen se deslizan y despejan la zona, la segunda fila cae sobre el suelo y no sobre la primera. Resultado con la caja subiendo a 20°/s hasta 55°: las cuatro cargas terminan en el suelo (y = 0.25) a z entre -4.3 y -5.8, y la compuerta vuelve a menos de 5° al bajar la caja a 20°/s. No se tocó la geometría de la compuerta, la Tabla Maestra (masa 20, amortiguamiento 10, límites 0 a 95°), el tope de 55° ni la fricción del acero (0.25/0.3). Con una fricción de 0.05 (prueba con compuerta de 0.5 m) las cargas llegan a z = -5.8; 0.1 alcanza.
+- **Consecuencia.** Las cargas del suelo y el cubo que se empuja con los dedos deslizan con facilidad (0.09). El agarre no cambia porque depende de la fricción dedo-cubo (0.81). Los tests de agarre y de reposo (10 s) siguen en verde.
+- **Criterio de los tests de descarga.** Se evalúan solo las cuatro cargas de la caja (índices 0 a 3): cada una debe quedar detrás del borde trasero (z menor que la bisagra) y con el centro por debajo de 0.5 m (apoyada en el suelo, no encima de otra: una carga apilada queda por encima de 0.7 m). `Dump_SlowTilt_EmptiesBedAndGateCloses` sube la caja a 20°/s con un incremento por cuadro (`JointAxis.Step`), espera, aplica el criterio, baja a 20°/s y exige compuerta menor que 5°.
 - La compuerta se abre sola (gravedad y empuje de las cargas) en todos los casos medidos; no hizo falta modificar su geometría ni su amortiguamiento.

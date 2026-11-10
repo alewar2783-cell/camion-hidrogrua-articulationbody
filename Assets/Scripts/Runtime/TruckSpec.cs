@@ -233,6 +233,10 @@ namespace Truck
             public const float SteelDynamicFriction = 0.25f;
             public const float SteelStaticFriction = 0.3f;
             public const PhysicsMaterialCombine SteelCombine = PhysicsMaterialCombine.Average;
+
+            public const float GroundDynamicFriction = 0.1f;
+            public const float GroundStaticFriction = 0.1f;
+            public const PhysicsMaterialCombine GroundCombine = PhysicsMaterialCombine.Average;
         }
 
         public static class Loads
