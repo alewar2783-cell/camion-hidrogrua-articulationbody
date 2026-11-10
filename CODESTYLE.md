@@ -4,7 +4,7 @@ Guía de estilo del proyecto. Los documentos van en español; el código, los id
 
 ## Estructura y nombres
 
-- Namespace `Truck` para todo el código. Un tipo público por archivo; el archivo se llama como el tipo.
+- Namespace `Truck` para todo el código. Un tipo público por archivo; el archivo se llama como el tipo. Excepción: los enums y structs de datos de `TruckSpec` viven en `TruckSpec.cs`.
 - Cuatro assemblies: `Truck.Runtime`, `Truck.Editor` (solo Editor), `Truck.Tests.EditMode`, `Truck.Tests.PlayMode`. Runtime nunca referencia a Editor.
 - `PascalCase` para tipos, métodos, propiedades y constantes públicas. `camelCase` para parámetros y locales. Campos privados `_camelCase`.
 - Campos serializados: `[SerializeField] private` con prefijo `_`. No usar campos públicos.
