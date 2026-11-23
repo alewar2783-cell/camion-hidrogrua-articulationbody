@@ -6,7 +6,7 @@ Reglas de la consigna: repositorio público sin `Library`, `Temp`, `Logs` ni `Bu
 
 - [x] **Sin archivos generados:** `.gitignore` excluye `Library/`, `Temp/`, `Obj/`, `Build/`, `Builds/`, `Logs/`, `UserSettings/` y `MemoryCaptures/`; `git ls-files` no contiene ninguno de esos directorios. Se versionan los `.meta`.
 - [x] **Sin rutas absolutas locales** en los archivos de texto versionados.
-- [x] **Abre y corre desde un clon limpio** con Unity 6000.3.14f1, sin pasos manuales: la escena `Assets/Scenes/Main.unity` ya contiene el camión y, en un clon limpio, los tests de EditMode (23) y los de PlayMode de la escena guardada (3) pasaron sin pasos manuales.
+- [x] **Abre y corre desde un clon limpio** con Unity 6000.3.14f1, sin pasos manuales: la escena `Assets/Scenes/Main.unity` ya contiene el camión y, en un clon limpio, los tests de EditMode (38) y los de PlayMode (44, con los 3 de la escena guardada) pasaron sin pasos manuales (ver `AUDITORIA.md`).
 - [x] **Requisitos del mecanismo** (cubiertos por `TruckSpecTests`): 10 cuerpos, 3 tipos de joint (Revolute, Prismatic, Spherical), 7 drives controlados, 2 pasivos, raíz definida.
 - [x] **Entrada y lectura de estado:** teclado (Input System) y sliders sincronizados; telemetría `Target` y `Real` por eje.
 - [x] **Interacción con Rigidbodies comunes:** 5 cubos de 8 kg.
@@ -20,7 +20,7 @@ Reglas de la consigna: repositorio público sin `Library`, `Temp`, `Logs` ni `Bu
 ### 1. Repositorio público en GitHub
 
 - [ ] Crear un repositorio **público** vacío en GitHub (sin README ni `.gitignore` propios, para evitar conflictos).
-- [ ] Desde la carpeta del proyecto, en la rama `feature/simulador` o en `main` (`CODESTYLE.md` habla de `main`; decidir antes de subir):
+- [ ] Desde la carpeta del proyecto, con la rama `feature/estilo-industrial` (el estilo industrial sobre `main`) o con `main` si se integra antes (`CODESTYLE.md` habla de `main`; decidir antes de subir):
 
 ```text
 git remote add origin https://github.com/<usuario>/<repositorio>.git

@@ -244,6 +244,9 @@ namespace Truck
             public const float CubeSize = 0.5f;
             public const float CubeMass = 8f;
 
+            /// <summary>Height below which a load is returned to its spawn point.</summary>
+            public const float KillPlaneY = -20f;
+
             public static readonly Vector3[] GroundSpawn =
             {
                 new Vector3(4.2f, 0.25f, 0.4f),

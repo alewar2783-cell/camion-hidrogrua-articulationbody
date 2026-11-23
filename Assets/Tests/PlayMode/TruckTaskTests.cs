@@ -44,6 +44,10 @@ namespace Truck.Tests
         private const float InitialLinearToleranceMeters = 0.03f;
         private const float InitialTransientSeconds = 1f;
         private const float MaxInitialSpeed = 0.5f;
+        private const float FallenHeight = -25f;
+        private const float RespawnSeconds = 0.5f;
+        private const float RespawnTolerance = 0.1f;
+        private const float MaxRespawnSpeed = 1f;
         private const string AccentedSample = "Telescópico Cámara ° áéíóú";
 
         // Where the first cube waits while the arm swings over its spawn point.
@@ -244,6 +248,20 @@ namespace Truck.Tests
                 Assert.Greater(position.y, MinCubeHeight, "Load_" + i);
                 Assert.Less(position.magnitude, MaxCubeDistance, "Load_" + i);
             }
+        }
+
+        [UnityTest]
+        public IEnumerator Loads_FallenOutOfWorld_RespawnAtSpawn()
+        {
+            TruckBuilder.Build(BuildMode.Full);
+            yield return null;
+            Rigidbody load = FindLoad(1);
+            TruckLoadsFactory.Place(load, new Vector3(0f, FallenHeight, 0f), Quaternion.identity);
+            yield return new WaitForSeconds(RespawnSeconds);
+
+            Vector3 spawn = TruckSpec.Loads.GroundSpawn[1];
+            Assert.Less(Vector3.Distance(load.position, spawn), RespawnTolerance, "respawn");
+            Assert.Less(load.linearVelocity.magnitude, MaxRespawnSpeed, "respawn speed");
         }
 
         [UnityTest]

@@ -29,6 +29,7 @@ namespace Truck
             Remove(TruckLoadsFactory.LoadsRootName);
             Remove(TruckUiFactory.RootName);
 
+            TruckSceneStyle.Apply();
             TruckLoadsFactory.CreateGround();
             (PhysicsMaterial grip, PhysicsMaterial steel) = TruckLoadsFactory.CreateMaterials();
             TruckLoadsFactory.CreateLoads(grip);

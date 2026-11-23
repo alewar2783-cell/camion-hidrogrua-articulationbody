@@ -182,6 +182,7 @@ namespace Truck.Tests
                 Assert.AreEqual(RigidbodyInterpolation.Interpolate, body.interpolation, label);
                 Assert.AreEqual(Vector3.one * TruckSpec.Loads.CubeSize, load.localScale, label);
                 AssertPersistedMaterial(load.GetComponent<Collider>(), GripMaterial, label);
+                Assert.IsNotNull(load.GetComponent<LoadKillPlane>(), label + " kill plane");
             }
         }
 

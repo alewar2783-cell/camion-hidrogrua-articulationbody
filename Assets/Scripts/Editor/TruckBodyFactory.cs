@@ -22,13 +22,6 @@ namespace Truck
         // local +X must raise the front, which needs the local X axis to point to world -X.
         private static readonly Quaternion BedRotation = Quaternion.Euler(0f, 180f, 0f);
 
-        private static readonly Color ChassisColor = new Color(0.2f, 0.22f, 0.25f);
-        private static readonly Color CabinColor = new Color(0.15f, 0.35f, 0.6f);
-        private static readonly Color CraneColor = new Color(0.9f, 0.55f, 0.1f);
-        private static readonly Color GripperColor = new Color(0.25f, 0.25f, 0.25f);
-        private static readonly Color BedColor = new Color(0.6f, 0.6f, 0.62f);
-        private static readonly Color WheelColor = new Color(0.08f, 0.08f, 0.08f);
-
         private const float TowerWidth = 0.6f;
         private const float BoomThickness = 0.35f;
         private const float JibThickness = 0.3f;
@@ -37,6 +30,17 @@ namespace Truck
         private const float FloorThickness = 0.1f;
         private const float TailgateThickness = 0.08f;
         private const float WheelWidth = 0.3f;
+
+        // Visual-only accents (no collider): a window band around the top of the cabin and a
+        // hazard-striped front bumper.
+        private const float WindowHeightFraction = 0.38f;
+        private const float WindowDepthFraction = 0.6f;
+        private const float WindowCenterFraction = 0.22f;
+        private const float WindowInset = 0.03f;
+        private const float BumperHeight = 0.26f;
+        private const float BumperDepth = 0.16f;
+        private const float BumperOverhang = 0.12f;
+        private const float BumperDrop = 0.06f;
 
         public static ArticulationBody CreateBody(BodySpec spec, Transform parent, BuildMode mode,
             PhysicsMaterial grip, PhysicsMaterial steel)
@@ -54,14 +58,14 @@ namespace Truck
         }
 
         public static GameObject CreateBox(string name, Transform parent, Vector3 localPosition,
-            Vector3 size, Color color, PhysicsMaterial material, bool hasCollider = true)
+            Vector3 size, Material look, PhysicsMaterial material, bool hasCollider = true)
         {
             GameObject box = GameObject.CreatePrimitive(PrimitiveType.Cube);
             box.name = name;
             box.transform.SetParent(parent, false);
             box.transform.localPosition = localPosition;
             box.transform.localScale = size;
-            box.GetComponent<MeshRenderer>().sharedMaterial = Paint(color);
+            box.GetComponent<MeshRenderer>().sharedMaterial = look;
 
             var collider = box.GetComponent<BoxCollider>();
             if (hasCollider)
@@ -217,31 +221,34 @@ namespace Truck
                 case BodyId.TorreBase:
                     CreateBox("Visual_Torre", node,
                         new Vector3(0f, G.TowerHeight * 0.5f, 0f),
-                        new Vector3(TowerWidth, G.TowerHeight, TowerWidth), CraneColor, null);
+                        new Vector3(TowerWidth, G.TowerHeight, TowerWidth),
+                        TruckMaterials.Crane(), null);
                     break;
                 case BodyId.BrazoPrincipal:
-                    AddArmVisual("Visual_Pluma", node, G.BoomLength, BoomThickness);
+                    AddArmVisual("Visual_Pluma", node, G.BoomLength, BoomThickness,
+                        TruckMaterials.Crane());
                     break;
                 case BodyId.BrazoSecundario:
-                    AddArmVisual("Visual_Secundario", node, G.JibLength, JibThickness);
+                    AddArmVisual("Visual_Secundario", node, G.JibLength, JibThickness,
+                        TruckMaterials.Crane());
                     break;
                 case BodyId.TramoTelescopico:
                     AddArmVisual("Visual_Telescopico", node, G.TelescopeLength,
-                        TelescopeThickness);
+                        TelescopeThickness, TruckMaterials.Telescope());
                     AddTelescopeRod(node);
                     break;
                 case BodyId.CabezalPinza:
                     CreateBox("Visual_Cabezal", node,
-                        new Vector3(0f, -G.PalmSize.y * 0.5f, 0f), G.PalmSize, GripperColor,
-                        null);
+                        new Vector3(0f, -G.PalmSize.y * 0.5f, 0f), G.PalmSize,
+                        TruckMaterials.Gripper(), null);
                     break;
                 case BodyId.DedoIzquierdo:
                     CreateBox("Visual_DedoIzquierdo", node, Vector3.zero, G.FingerSize,
-                        GripperColor, grip);
+                        TruckMaterials.Gripper(), grip);
                     break;
                 case BodyId.DedoDerecho:
                     CreateBox("Visual_DedoDerecho", node, Vector3.zero, G.FingerSize,
-                        GripperColor, grip);
+                        TruckMaterials.Gripper(), grip);
                     break;
                 case BodyId.CajaVolcadora:
                     AddBedVisuals(node, steel);
@@ -250,7 +257,7 @@ namespace Truck
                     CreateBox("Visual_Compuerta", node,
                         new Vector3(0f, -G.TailgateHeight * 0.5f, 0f),
                         new Vector3(G.TailgateWidth, G.TailgateHeight, TailgateThickness),
-                        BedColor, null);
+                        TruckMaterials.Hazard(), null);
                     break;
             }
         }
@@ -259,11 +266,13 @@ namespace Truck
         {
             Vector3 chassis = G.ChassisSize;
             Vector3 cabin = G.CabinSize;
-            CreateBox("Visual_Chasis", node, Vector3.zero, chassis, ChassisColor, null);
-            CreateBox("Visual_Cabina", node,
-                new Vector3(0f, (chassis.y + cabin.y) * 0.5f,
-                    G.CabinCenterZ - G.ChassisPivot.z),
-                cabin, CabinColor, null);
+            CreateBox("Visual_Chasis", node, Vector3.zero, chassis, TruckMaterials.Chassis(),
+                null);
+            var cabinCenter = new Vector3(0f, (chassis.y + cabin.y) * 0.5f,
+                G.CabinCenterZ - G.ChassisPivot.z);
+            CreateBox("Visual_Cabina", node, cabinCenter, cabin, TruckMaterials.Cabin(), null);
+            AddCabinWindows(node, cabinCenter, cabin);
+            AddBumper(node, chassis);
 
             float radius = G.ChassisPivot.y;
             float x = chassis.x * 0.5f + WheelWidth * 0.5f;
@@ -286,14 +295,34 @@ namespace Truck
             wheel.transform.localPosition = localPosition;
             wheel.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
             wheel.transform.localScale = new Vector3(radius * 2f, WheelWidth * 0.5f, radius * 2f);
-            wheel.GetComponent<MeshRenderer>().sharedMaterial = Paint(WheelColor);
+            wheel.GetComponent<MeshRenderer>().sharedMaterial = TruckMaterials.Tyre();
+        }
+
+        // The window band pokes out of the cabin's front and sides, so it reads as glass from
+        // any orbit angle. It has no collider: it only changes the look.
+        private static void AddCabinWindows(Transform node, Vector3 cabinCenter, Vector3 cabin)
+        {
+            float depth = cabin.z * WindowDepthFraction;
+            var center = new Vector3(0f, cabinCenter.y + cabin.y * WindowCenterFraction,
+                cabinCenter.z + (cabin.z - depth) * 0.5f + WindowInset);
+            var size = new Vector3(cabin.x + WindowInset * 2f, cabin.y * WindowHeightFraction,
+                depth);
+            CreateBox("Visual_Ventanas", node, center, size, TruckMaterials.Glass(), null, false);
+        }
+
+        private static void AddBumper(Transform node, Vector3 chassis)
+        {
+            var center = new Vector3(0f, -BumperDrop, (chassis.z + BumperDepth) * 0.5f);
+            var size = new Vector3(chassis.x + BumperOverhang, BumperHeight, BumperDepth);
+            CreateBox("Visual_Paragolpes", node, center, size, TruckMaterials.Hazard(), null,
+                false);
         }
 
         private static void AddArmVisual(string name, Transform node, float length,
-            float thickness)
+            float thickness, Material look)
         {
             CreateBox(name, node, new Vector3(0f, 0f, length * 0.5f),
-                new Vector3(thickness, thickness, length), CraneColor, null);
+                new Vector3(thickness, thickness, length), look, null);
         }
 
         // Visual only: keeps the extended section visually attached to the jib. It has no
@@ -304,7 +333,7 @@ namespace Truck
             CreateBox("Visual_VarillaTelescopica", node,
                 new Vector3(0f, 0f, -travel * 0.5f),
                 new Vector3(TelescopeThickness * 0.8f, TelescopeThickness * 0.8f, travel),
-                CraneColor, null, false);
+                TruckMaterials.Telescope(), null, false);
         }
 
         private static void AddBedVisuals(Transform node, PhysicsMaterial steel)
@@ -317,20 +346,15 @@ namespace Truck
             float centerZ = -length * 0.5f;
 
             CreateBox("Visual_PisoCaja", node, new Vector3(0f, 0f, centerZ),
-                new Vector3(width, FloorThickness, length), BedColor, steel);
+                new Vector3(width, FloorThickness, length), TruckMaterials.Bed(), steel);
             float wallX = (width - WallThickness) * 0.5f;
             CreateBox("Visual_ParedIzquierda", node, new Vector3(-wallX, wallCenterY, centerZ),
-                new Vector3(WallThickness, wallHeight, length), BedColor, null);
+                new Vector3(WallThickness, wallHeight, length), TruckMaterials.Bed(), null);
             CreateBox("Visual_ParedDerecha", node, new Vector3(wallX, wallCenterY, centerZ),
-                new Vector3(WallThickness, wallHeight, length), BedColor, null);
+                new Vector3(WallThickness, wallHeight, length), TruckMaterials.Bed(), null);
             CreateBox("Visual_FrenteCaja", node,
                 new Vector3(0f, wallCenterY, -length + WallThickness * 0.5f),
-                new Vector3(width, wallHeight, WallThickness), BedColor, null);
-        }
-
-        private static Material Paint(Color color)
-        {
-            return TruckAssetStore.LoadOrCreateVisualMaterial(color);
+                new Vector3(width, wallHeight, WallThickness), TruckMaterials.Bed(), null);
         }
     }
 }

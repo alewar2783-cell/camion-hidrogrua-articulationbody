@@ -9,7 +9,7 @@ Un camión con caja volcadora y una grúa articulada (hidrogrúa) con pinza. La 
 1. **Carga:** con la grúa se toman cubos de 8 kg del suelo (agarre por fricción de los dos dedos) y se depositan en la caja.
 2. **Descarga:** se repliega la grúa, se eleva la caja volcadora y las cargas, al resbalar, abren por contacto la compuerta pasiva y caen al corralón.
 
-Hay 5 cubos en el suelo. La maniobra se puede repetir con el botón de reinicio.
+Hay 5 cubos en el suelo. La maniobra se puede repetir con el botón de reinicio; un cubo que cae fuera del mundo (por debajo de y = -20 m) vuelve solo a su punto de origen (`LoadKillPlane`).
 
 ## Enlaces
 
@@ -74,7 +74,7 @@ Unity.exe -batchmode -nographics -projectPath <ruta> -runTests -testPlatform Pla
 ```
 
 - **EditMode:** `TruckSpec` (requisitos de la consigna: 10 cuerpos, 3 tipos, 7 drives, 2 pasivos), `JointAxis`, telemetría y cámara.
-- **PlayMode:** gravedad pura, alcance de cada drive, agarre y elevación de un cubo, volcado con compuerta, y la escena `Main` guardada (`TruckSavedSceneTests`).
+- **PlayMode:** gravedad pura, alcance de cada drive, agarre y elevación de un cubo, volcado con compuerta, cubos que caen del mundo y reaparecen, y la escena `Main` guardada (`TruckSavedSceneTests`).
 
 ## Build WebGL
 
@@ -91,8 +91,9 @@ Unity.exe -batchmode -quit -projectPath <ruta> -buildTarget WebGL -executeMethod
 ```text
 Assets/
   Scenes/Main.unity          escena con el camión generado
-  Scripts/Runtime/           TruckSpec, JointAxis, SimulatorController, TelemetryUI, OrbitCamera, SceneResetter
+  Scripts/Runtime/           TruckSpec, JointAxis, SimulatorController, TelemetryUI, OrbitCamera, SceneResetter, LoadKillPlane
   Scripts/Editor/            TruckBuilder y fábricas, TruckSceneSaver, BuildScript
+  Shaders/                   IndustrialToon y GradientSky (estilo, ver docs/ESTILO.md)
   Materials/ PhysicsMaterials/
   Tests/EditMode/ Tests/PlayMode/
 docs/
