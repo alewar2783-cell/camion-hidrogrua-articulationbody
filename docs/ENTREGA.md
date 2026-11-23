@@ -39,12 +39,12 @@ La build (`Build/WebGL`) no se versiona; hay que generarla y comprimirla con `in
 "<carpeta de Unity>/Editor/6000.3.14f1/Editor/Unity.exe" -batchmode -quit -projectPath "<carpeta del proyecto>" -buildTarget WebGL -executeMethod Truck.BuildScript.BuildWebGl -logFile build.log
 # (o desde el Editor: Tools > Truck > Build WebGL)
 
-# 2) Comprimir el contenido de Build/WebGL (PowerShell o Git Bash; tar de Windows escribe rutas con "/")
+# 2) Comprimir el contenido de Build/WebGL con rutas relativas y "/" (itch.io rechazo el zip hecho con tar: "not a valid zip file")
 cd <carpeta del proyecto>
-tar -a -c -f Build/camion-hidrogrua-webgl.zip -C Build/WebGL .
+python -c "import zipfile,os;r='Build/WebGL';z=zipfile.ZipFile('Build/camion-hidrogrua-webgl.zip','w',zipfile.ZIP_DEFLATED);[z.write(os.path.join(d,f),os.path.relpath(os.path.join(d,f),r).replace(os.sep,'/')) for d,_,fs in os.walk(r) for f in fs];z.close()"
 ```
 
-Comprobar que el `.zip` tiene `index.html` y la carpeta `Build/` en la raíz. Alternativa en PowerShell: `Compress-Archive -Path "<carpeta del proyecto>/Build/WebGL/*" -DestinationPath "<carpeta del proyecto>/Build/camion-hidrogrua-webgl.zip"`. En Windows PowerShell 5.1 las rutas del `.zip` pueden quedar con barras invertidas; si itch.io no lo carga, usar `tar`.
+Comprobar que el `.zip` tiene `index.html` y la carpeta `Build/` en la raíz. Alternativa en PowerShell: `Compress-Archive -Path "<carpeta del proyecto>/Build/WebGL/*" -DestinationPath "<carpeta del proyecto>/Build/camion-hidrogrua-webgl.zip"`. En Windows PowerShell 5.1 las rutas del `.zip` pueden quedar con barras invertidas; no usar `tar`: itch.io lo rechazo.
 
 Prueba local previa (equivale al caso de itch.io, que sirve los `.unityweb` sin cabecera de compresión y usa el *Decompression Fallback*):
 
