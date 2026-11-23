@@ -153,8 +153,8 @@ class TestHuman(unittest.TestCase):
         for seed in range(200):
             _, h = self.make(seed)
             d = h.react()["seconds"]
-            self.assertGreaterEqual(d, 0.15 - 1e-3)
-            self.assertLessEqual(d, 0.70 + 1e-3)
+            self.assertGreaterEqual(d, 0.08 - 1e-3)
+            self.assertLessEqual(d, 0.38 + 1e-3)
 
     def test_reproducible_seed(self):
         a = pv.run_dry(None, 5, 1.0)
@@ -194,8 +194,8 @@ class TestScenario(unittest.TestCase):
     def test_dry_run_duration_and_schema(self):
         for seed in range(1, 9):
             res = pv.run_dry(None, seed, 1.0)
-            self.assertGreaterEqual(res["total_duration_s"], 150.0, seed)
-            self.assertLessEqual(res["total_duration_s"], 210.0, seed)
+            self.assertGreaterEqual(res["total_duration_s"], 80.0, seed)
+            self.assertLessEqual(res["total_duration_s"], 120.0, seed)
             self.assertEqual(res["event_count"], len(res["events"]))
             json.loads(json.dumps(res))  # serializable
             last_t = -1.0
@@ -216,7 +216,7 @@ class TestScenario(unittest.TestCase):
         self.assertEqual(keys[-2:], ["up", "down"])
         acts = [s.action for s in pv.build_script()]
         self.assertIn("drag_slider", acts)
-        self.assertEqual(acts[-3:], ["click_reset", "wait", "idle"])
+        self.assertEqual(acts[-2:], ["click_reset", "wait"])
 
     def test_reset_click_never_center(self):
         rects = pv.default_rects()
@@ -248,9 +248,9 @@ class TestRecorderAndWinput(unittest.TestCase):
         cmd = rec.build_command((10, 20, 1281, 721), "o.mp4")
         self.assertEqual(cmd[0], "ffmpeg")
         joined = " ".join(cmd)
-        for frag in ("-f gdigrab", "-framerate 30", "-draw_mouse 1", "-offset_x 10",
+        for frag in ("-f gdigrab", "-framerate 60", "-draw_mouse 1", "-offset_x 10",
                      "-offset_y 20", "-video_size 1280x720", "-i desktop", "-c:v libx264",
-                     "-preset veryfast", "-crf 18", "-pix_fmt yuv420p"):
+                     "-preset ultrafast", "-crf 20", "-pix_fmt yuv420p"):
             self.assertIn(frag, joined)
         self.assertEqual(rec.parse_region("0,0,1920x1080"), (0, 0, 1920, 1080))
 

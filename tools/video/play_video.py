@@ -146,107 +146,91 @@ def build_script() -> List[Step]:
         add("key_hold", phase, key=key, seconds=secs, jitter=jitter)
         add("wait", phase, gap=False, seconds=settle + 0.6)  # margen: que el Real asiente
 
-    # -- 0. Intro: el cursor entra, orbita y zoom para encuadrar el camion (~18 s)
+    # -- 0. Intro: el cursor entra, orbita y zoom para encuadrar el camion
     p = "intro"
     add("focus", p, gap=False)
-    add("wait", p, gap=False, seconds=3.0)
+    add("wait", p, gap=False, seconds=1.2)
     add("move_view", p, fx=0.70, fy=0.65)
-    add("idle", p, seconds=2.0)
+    add("idle", p, seconds=0.5)
     add("right_drag", p, dx=-250, dy=-30)
-    add("wait", p, gap=False, seconds=0.8)
     add("right_drag", p, dx=130, dy=15)
     add("wheel", p, notches=3)
-    add("wait", p, gap=False, seconds=1.0)
     add("right_drag", p, dx=-90, dy=-20)
-    add("idle", p, seconds=4.0)
     add("pause_point", p, gap=False, label="fin intro")
 
-    # -- 1. Telemetria: arrastrar la pluma un poco y volver, mirar Target/Real (~28 s)
+    # -- 1. Telemetria: arrastrar la pluma un poco y volver, mirar Target/Real
     p = "telemetria"
-    add("hover_label", p, name="Pluma", dwell=2.5)
-    add("drag_slider", p, name="Pluma", from_value=70.0, to_value=55.0, duration=1.8)
-    add("wait", p, gap=False, seconds=1.0)
-    add("hover_label", p, name="Pluma", dwell=3.5)
-    add("drag_slider", p, name="Pluma", from_value=55.0, to_value=70.0, duration=1.6)
-    add("hover_label", p, name="Pluma", dwell=2.5)
-    add("hover_label", p, name="Telescopico", dwell=2.5)
-    add("hover_label", p, name="Torre", dwell=2.5)
-    add("hover_label", p, name="Caja", dwell=2.0)
-    add("move_view", p, fx=0.55, fy=0.80)
-    add("wait", p, gap=False, seconds=2.0)
+    add("hover_label", p, name="Pluma", dwell=0.6)
+    add("drag_slider", p, name="Pluma", from_value=70.0, to_value=55.0, duration=1.5)
+    add("hover_label", p, name="Pluma", dwell=1.0)
+    add("drag_slider", p, name="Pluma", from_value=55.0, to_value=70.0, duration=1.3)
+    add("hover_label", p, name="Telescopico", dwell=0.4)
+    add("hover_label", p, name="Torre", dwell=0.4)
     add("pause_point", p, gap=False, label="fin telemetria")
 
     # -- 2. Aproximacion al primer cubo, por arriba (orden corregido de GUION_VIDEO.md)
     p = "aproximacion"
     add("move_view", p, fx=0.55, fy=0.85)
-    add("wait", p, gap=False, seconds=1.0)
-    hold(p, "a", 1.7, 2.0)       # torre a -76.6 grados
-    hold(p, "t", 1.3, 2.0)       # telescopico a 1.0 m
-    hold(p, "f", 1.0, 2.5)       # secundario, con la pluma todavia alta
-    hold(p, "s", 0.93, 1.0, jitter=0.02)  # pluma de 70 a ~42 grados
-    add("hover_label", p, name="Pluma", dwell=4.0)   # esperar que el Real asiente
-    add("wait", p, gap=False, seconds=2.0)
+    hold(p, "a", 1.7, 0.6)       # torre a -76.6 grados
+    hold(p, "t", 1.3, 0.6)       # telescopico a 1.0 m
+    hold(p, "f", 1.0, 1.0)       # secundario, con la pluma todavia alta
+    hold(p, "s", 0.93, 0.8, jitter=0.02)  # pluma de 70 a ~42 grados
+    add("hover_label", p, name="Pluma", dwell=1.2)   # esperar que el Real asiente
     add("move_view", p, fx=0.50, fy=0.75)
     add("wheel", p, notches=2)   # acercarse al cabezal
     add("right_drag", p, dx=60, dy=10)
-    add("wait", p, gap=False, seconds=1.5)
+    add("wait", p, gap=False, seconds=0.5)
     add("pause_point", p, gap=False, label="antes del descenso fino")
 
     # -- 3. Descenso fino con el slider de la pluma: 42 -> 31.2 grados
     p = "descenso"
-    add("drag_slider", p, name="Pluma", from_value=42.0, to_value=31.2, duration=3.2)
-    add("hover_label", p, name="Pluma", dwell=4.0)
-    add("wait", p, gap=False, seconds=3.0)
+    add("drag_slider", p, name="Pluma", from_value=42.0, to_value=31.2, duration=2.2)
+    add("hover_label", p, name="Pluma", dwell=1.2)
+    add("wait", p, gap=False, seconds=1.2)
     add("pause_point", p, gap=False, label="antes del agarre")
 
     # -- 4. Agarre
     p = "agarre"
     add("move_view", p, fx=0.55, fy=0.80)
-    hold(p, "e", 1.0, 2.5, jitter=0.05)
-    add("hover_label", p, name="Pinza", dwell=2.0)
+    hold(p, "e", 1.0, 1.4, jitter=0.05)
     add("pause_point", p, gap=False, label="antes de elevar")
 
     # -- 5. Elevacion y giro hacia la caja
     p = "elevacion_giro"
-    add("move_view", p, fx=0.55, fy=0.80)
-    hold(p, "w", 0.8, 2.0, jitter=0.05)
+    hold(p, "w", 0.8, 0.8, jitter=0.05)
     add("wheel", p, notches=-2)  # alejarse para ver grua y caja
-    hold(p, "d", 1.0, 0.6, jitter=0.03)   # torre de vuelta, despacio, en dos tandas
-    hold(p, "d", 0.7, 3.0, jitter=0.03)
+    hold(p, "d", 1.0, 0.2, jitter=0.03)   # torre de vuelta, despacio, en dos tandas
+    hold(p, "d", 0.7, 1.4, jitter=0.03)
     add("pause_point", p, gap=False, label="antes de colocar")
 
     # -- 6. Colocacion sobre el piso de la caja y soltar
     p = "colocacion"
-    hold(p, "g", 1.3, 2.0)       # telescopico a 0
-    hold(p, "s", 0.6, 1.5)       # pluma de 55 a 38
-    hold(p, "f", 0.6, 3.0)       # secundario a -105
-    add("hover_label", p, name="BrazoSecundario", dwell=2.0)
+    hold(p, "g", 1.3, 0.8)       # telescopico a 0
+    hold(p, "s", 0.6, 0.6)       # pluma de 55 a 38
+    hold(p, "f", 0.6, 1.2)       # secundario a -105
     add("move_view", p, fx=0.55, fy=0.80)
-    hold(p, "q", 0.9, 3.0, jitter=0.05)  # abrir pinza: el cubo cae
+    hold(p, "q", 0.9, 1.4, jitter=0.05)  # abrir pinza: el cubo cae
     add("pause_point", p, gap=False, label="antes del repliegue")
 
     # -- 7. Repliegue de la grua a Stowed
     p = "repliegue"
-    hold(p, "w", 1.1, 2.0)
-    hold(p, "r", 1.7, 3.5)
+    hold(p, "w", 1.1, 0.4)
+    hold(p, "r", 1.7, 1.2)
     add("wheel", p, notches=-1)
     add("right_drag", p, dx=-110, dy=-15)
-    add("wait", p, gap=False, seconds=1.5)
     add("pause_point", p, gap=False, label="antes del volcado")
 
     # -- 8. Volcado, espera, regreso
     p = "volcado"
-    hold(p, "up", 2.75, 4.0, jitter=0.03)   # caja a 55 grados; esperar que resbale el cubo
-    add("hover_label", p, name="Caja", dwell=2.5)
-    add("wait", p, gap=False, seconds=2.0)
-    hold(p, "down", 2.75, 3.5, jitter=0.03)
+    hold(p, "up", 2.75, 3.4, jitter=0.03)   # caja a 55 grados; esperar que resbale el cubo
+    add("hover_label", p, name="Caja", dwell=0.8)
+    hold(p, "down", 2.75, 1.0, jitter=0.03)
     add("pause_point", p, gap=False, label="antes de reiniciar")
 
     # -- 9. Cierre: clic humano en "Reiniciar Escena" (nunca al centro)
     p = "cierre"
     add("click_reset", p)
-    add("wait", p, gap=False, seconds=2.5)
-    add("idle", p, seconds=3.0)
+    add("wait", p, gap=False, seconds=1.2)
     return S
 
 

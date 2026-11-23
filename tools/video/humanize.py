@@ -36,11 +36,11 @@ class HumanConfig:
     burst_max: float = 0.30           # mezcla de perfil con rafaga rapida
     curvature: Tuple[float, float] = (0.02, 0.14)  # fraccion de la distancia
     curvature_cap_px: float = 150.0
-    tremor_px: float = 0.9
-    sample_dt: float = 0.008
+    tremor_px: float = 0.3
+    sample_dt: float = 0.007
     pre_click_pause: Tuple[float, float] = (0.08, 0.30)
     click_hold: Tuple[float, float] = (0.06, 0.14)
-    react_range: Tuple[float, float] = (0.15, 0.70)
+    react_range: Tuple[float, float] = (0.08, 0.38)
     key_jitter: float = 0.10
     band: Tuple[float, float] = (0.15, 0.85)   # franja util del rectangulo
     center_exclusion: float = 0.15             # elipse central excluida (30 % del tamano)
@@ -110,7 +110,7 @@ class Segment:
         self.kind = kind
         self.pause_after = pause_after
         self._ph = [rng.uniform(0, 2 * math.pi) for _ in range(6)]
-        self._fr = [rng.uniform(6.0, 9.0), rng.uniform(10.0, 14.0), rng.uniform(15.0, 22.0)]
+        self._fr = [rng.uniform(1.2, 2.2), rng.uniform(2.6, 4.0), rng.uniform(4.5, 6.5)]
         # tabla de longitud de arco para avanzar a velocidad geometrica coherente
         pts = [_bezier(p0, p1, p2, p3, i / self.TABLE) for i in range(self.TABLE + 1)]
         acc = [0.0]
@@ -384,17 +384,17 @@ class Human:
 
     def idle(self, seconds: float, amplitude: Optional[float] = None) -> Dict:
         """Deriva suave del cursor mientras la persona "piensa" / mira."""
-        amp = amplitude if amplitude is not None else self.rng.uniform(3.0, 12.0)
-        w1, w2 = self.rng.uniform(0.5, 1.3), self.rng.uniform(0.4, 1.1)
+        amp = amplitude if amplitude is not None else self.rng.uniform(2.0, 6.0)
+        w1, w2 = self.rng.uniform(0.4, 0.9), self.rng.uniform(0.3, 0.8)
         p1, p2 = self.rng.uniform(0, 6.28), self.rng.uniform(0, 6.28)
         x0, y0 = self.pos
         o0 = (amp * math.sin(p1), amp * math.sin(p2))
         t0 = self.b.now()
-        step = 0.03
+        step = 0.012
         while self.b.now() - t0 < seconds:
             t = self.b.now() - t0
-            ox = amp * math.sin(w1 * t + p1) - o0[0] + self.rng.gauss(0, 0.35)
-            oy = amp * math.sin(w2 * t + p2) - o0[1] + self.rng.gauss(0, 0.35)
+            ox = amp * math.sin(w1 * t + p1) - o0[0]
+            oy = amp * math.sin(w2 * t + p2) - o0[1]
             p = self._clamp((x0 + ox, y0 + oy))
             self.b.move(*p)
             self.pos = p
@@ -405,7 +405,7 @@ class Human:
     def hover(self, rect: Rect, dwell: float = 1.0, target_w: Optional[float] = None) -> Dict:
         pt = pick_point(rect, self.rng, self.cfg.band, self.cfg.center_exclusion)
         info = self.move_to(pt[0], pt[1], target_w or min(rect[2], rect[3]))
-        info["dwell"] = self.idle(dwell, amplitude=self.rng.uniform(2.0, 6.0))
+        info["dwell"] = self.idle(dwell, amplitude=self.rng.uniform(1.5, 3.5))
         return info
 
     # -- clicks
@@ -446,18 +446,18 @@ class Human:
         self.move_to(grab[0], grab[1], handle_rect[2])
         self._hsleep(self.rng.uniform(*self.cfg.pre_click_pause))
         self.b.button("left", True)
-        self._hsleep(self.rng.uniform(0.04, 0.10))
+        self._hsleep(self.rng.uniform(0.03, 0.07))
         dx = (to_frac - from_frac) * self.slider_px_per_unit(track_rect, handle_rect)
-        end = (grab[0] + dx, grab[1] + self.rng.uniform(-3.0, 3.0))
+        end = (grab[0] + dx, grab[1] + self.rng.uniform(-1.5, 1.5))
         dur = duration if duration is not None else clamp(abs(dx) / self.rng.uniform(110, 220),
                                                           0.6, 4.0)
-        stops = 2 if (abs(dx) > 120 and self.rng.random() < 0.35) else 1
+        stops = 1
         waypoints = [end]
         if stops == 2:
             waypoints = [(grab[0] + dx * self.rng.uniform(0.45, 0.65), end[1]), end]
         for i, wp in enumerate(waypoints):
             path = plan_move(self.pos, self._clamp(wp), self.rng, self.cfg, allow_mistake=False,
-                             duration=dur / stops, curvature_scale=0.15)
+                             duration=dur / stops, curvature_scale=0.05)
             self._play(path)
             if i + 1 < stops:
                 self._hsleep(self.rng.uniform(0.25, 0.6))
@@ -500,7 +500,7 @@ class Human:
 
     # -- teclado
     def key_hold(self, key: str, seconds: float, jitter: Optional[float] = None,
-                 drift: bool = True) -> Dict:
+                 drift: bool = False) -> Dict:
         j = self.cfg.key_jitter if jitter is None else jitter
         actual = seconds * (1.0 + self.rng.uniform(-j, j))
         t0 = self.b.now()

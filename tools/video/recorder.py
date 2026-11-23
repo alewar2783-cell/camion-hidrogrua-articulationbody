@@ -35,16 +35,16 @@ def default_output() -> str:
     return os.path.join(OUT_DIR, "play_%s.mp4" % datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
 
 
-def build_command(region: Region, out_path: str, fps: int = 30, ffmpeg: str = "ffmpeg") -> List[str]:
+def build_command(region: Region, out_path: str, fps: int = 60, ffmpeg: str = "ffmpeg") -> List[str]:
     x, y, w, h = even_region(region)
     return [ffmpeg, "-y", "-f", "gdigrab", "-framerate", str(fps), "-draw_mouse", "1",
             "-offset_x", str(x), "-offset_y", str(y), "-video_size", "%dx%d" % (w, h),
-            "-i", "desktop", "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+            "-i", "desktop", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "20",
             "-pix_fmt", "yuv420p", out_path]
 
 
 class Recorder:
-    def __init__(self, region: Region, out_path: Optional[str] = None, fps: int = 30,
+    def __init__(self, region: Region, out_path: Optional[str] = None, fps: int = 60,
                  ffmpeg: str = "ffmpeg", log=print):
         self.region = even_region(region)
         self.out_path = out_path or default_output()
