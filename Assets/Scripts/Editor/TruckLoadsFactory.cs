@@ -7,7 +7,12 @@ namespace Truck
         public const string EnvironmentName = "Environment";
         public const string LoadsRootName = "Loads";
 
-        private static readonly Color LoadColor = new Color(0.8f, 0.25f, 0.15f);
+        private const float YardHeight = 0.02f;
+        private const float YardLift = 0.01f;
+        // The hazard border sits just above the yard so the two flat boxes never z-fight.
+        private const float YardBorderWidth = 0.35f;
+        private const float YardBorderHeight = 0.03f;
+        private const float YardBorderLift = 0.015f;
 
         public static string LoadName(int index)
         {
@@ -52,7 +57,7 @@ namespace Truck
             for (int i = 0; i < spawn.Length; i++)
             {
                 GameObject cube = TruckBodyFactory.CreateBox(LoadName(i), loads.transform,
-                    spawn[i], Vector3.one * TruckSpec.Loads.CubeSize, LoadColor, grip);
+                    spawn[i], Vector3.one * TruckSpec.Loads.CubeSize, TruckMaterials.Cargo(), grip);
                 var body = cube.AddComponent<Rigidbody>();
                 body.mass = TruckSpec.Loads.CubeMass;
                 body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
@@ -84,15 +89,36 @@ namespace Truck
             GameObject ground = TruckBodyFactory.CreateBox("Ground", environment.transform,
                 new Vector3(0f, -0.5f, 0f),
                 new Vector3(TruckSpec.Geometry.GroundSize, 1f, TruckSpec.Geometry.GroundSize),
-                new Color(0.42f, 0.5f, 0.36f), soil);
+                TruckMaterials.Ground(), soil);
             ground.isStatic = true;
 
             Vector3 yard = TruckSpec.Geometry.YardCenter;
             Vector2 yardSize = TruckSpec.Geometry.YardSize;
             TruckBodyFactory.CreateBox("Visual_Corralon", environment.transform,
-                new Vector3(yard.x, 0.01f, yard.z), new Vector3(yardSize.x, 0.02f, yardSize.y),
-                new Color(0.55f, 0.45f, 0.3f), null, false);
+                new Vector3(yard.x, YardLift, yard.z),
+                new Vector3(yardSize.x, YardHeight, yardSize.y), TruckMaterials.Yard(), null,
+                false);
+            AddYardBorder(environment.transform, yard, yardSize);
             return environment;
+        }
+
+        // Visual only: a hazard-striped frame that marks the unloading yard.
+        private static void AddYardBorder(Transform parent, Vector3 yard, Vector2 yardSize)
+        {
+            Material hazard = TruckMaterials.YardBorder();
+            float halfX = (yardSize.x - YardBorderWidth) * 0.5f;
+            float halfZ = (yardSize.y - YardBorderWidth) * 0.5f;
+            var alongX = new Vector3(yardSize.x, YardBorderHeight, YardBorderWidth);
+            var alongZ = new Vector3(YardBorderWidth, YardBorderHeight, yardSize.y);
+            foreach (float side in new[] { -1f, 1f })
+            {
+                TruckBodyFactory.CreateBox("Visual_BordeCorralon", parent,
+                    new Vector3(yard.x, YardBorderLift, yard.z + side * halfZ), alongX, hazard,
+                    null, false);
+                TruckBodyFactory.CreateBox("Visual_BordeCorralon", parent,
+                    new Vector3(yard.x + side * halfX, YardBorderLift, yard.z), alongZ, hazard,
+                    null, false);
+            }
         }
     }
 }
