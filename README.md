@@ -13,6 +13,7 @@ Hay 5 cubos en el suelo. La maniobra se puede repetir con el botón de reinicio;
 
 ## Enlaces
 
+- Repositorio: https://github.com/alewar2783-cell/camion-hidrogrua-articulationbody
 - Build jugable (itch.io): **[COMPLETAR: URL de la página en itch.io]**
 - Video de la maniobra (YouTube): **[COMPLETAR: URL del video]**
 - Documento con diagrama y explicación: [`docs/DIAGRAMA_Y_EXPLICACION.md`](docs/DIAGRAMA_Y_EXPLICACION.md)

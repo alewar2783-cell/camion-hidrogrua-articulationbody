@@ -28,7 +28,7 @@ Auditoría contra la consigna ("Trabajo práctico: prototipo con Articulation Bo
 | Sin `Library`, `Temp`, `Logs`, `Build` en el repo | `git ls-files` no contiene esas carpetas ni `.csproj`/`.sln` (verificado); `.meta` versionados | OK |
 | Sin rutas absolutas locales | `git grep` de `C:\`/`D:\` en archivos versionados (salvo `docs/superpowers`): sin resultados | OK |
 | Un clon limpio abre y ejecuta | Clon limpio de `HEAD` probado en esta auditoría: abre, compila y pasa los tests (ver resultados). Salvedad: el manifest conserva paquetes de IA pre-release (`com.unity.ai.assistant 2.21.0-pre.2`, `com.unity.pipeline 0.10.0-exp.1`) que el simulador no usa | PARTIAL |
-| Repositorio público | Solo existe el repo local; sin `remote` ni push (lo hace el usuario) | GAP (usuario) |
+| Repositorio público | https://github.com/alewar2783-cell/camion-hidrogrua-articulationbody (público, rama `main`) | OK |
 | Build en itch.io, utilizable desde la página | `docs/ENTREGA.md` secciones 2 y 3; falta subirla y probarla en ventana privada | GAP (usuario) |
 | Video de YouTube con la maniobra en vivo | Guion en `docs/GUION_VIDEO.md`; sin grabar | GAP (usuario) |
 | Documento breve con diagrama y explicación | `docs/DIAGRAMA_Y_EXPLICACION.md` (árbol Mermaid con tipo, eje y límites por unión) y `docs/diagrama_articulaciones.svg`: qué máquina y operación (sección 1), cómo se controla (4) y cómo se eligieron los drives (5) | OK |

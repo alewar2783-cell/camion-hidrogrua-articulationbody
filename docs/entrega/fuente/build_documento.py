@@ -9,7 +9,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.abspath(os.path
 CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe"
 BLUE = "1F3A5F"; FONT = "Arial"; SIZE = 10.5
 TITLE = "Simulador de camión volcador con hidrogrúa (Articulation Body)"
-DATA = [("Nombre y apellido", "COMPLETAR"), ("Repositorio", "COMPLETAR"), ("Build en itch.io", "COMPLETAR"), ("Video en YouTube", "COMPLETAR")]
+DATA = [("Nombre y apellido", "COMPLETAR"), ("Repositorio", "https://github.com/alewar2783-cell/camion-hidrogrua-articulationbody"), ("Build en itch.io", "COMPLETAR"), ("Video en YouTube", "COMPLETAR")]
 
 # bloques: ("h", titulo) ("p", texto) ("ul", [items]) ("fig", png, caption) ("tb", head, rows)
 DOC = [
