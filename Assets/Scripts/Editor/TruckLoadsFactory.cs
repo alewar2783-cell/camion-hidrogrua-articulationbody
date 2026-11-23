@@ -62,6 +62,7 @@ namespace Truck
                 body.mass = TruckSpec.Loads.CubeMass;
                 body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
                 body.interpolation = RigidbodyInterpolation.Interpolate;
+                cube.AddComponent<LoadKillPlane>().Initialize(body, spawn[i]);
             }
 
             return loads;
