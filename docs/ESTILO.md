@@ -111,12 +111,12 @@ del panel), `img/estilo_03_agarre.png`, `img/estilo_04_volcado.png`.
   (unos 40 objetos de 12-24 vértices) y un skybox de una pasada.
 - Shaders y materiales compatibles con SRP Batcher (todas las propiedades en `UnityPerMaterial`).
 - Sombras duras: el toon ya cuantiza, así que no compila las variantes de sombra suave.
-- Pendiente para el controlador: correr EditMode/PlayMode y el build WebGL; confirmar que no
-  aparecen más líneas "not supported on this GPU" que las tres de URP conocidas.
+- Verificado en la auditoría (`docs/AUDITORIA.md`): tests en verde y las líneas "not supported on
+  this GPU" de la build.
 
 ## No verificado / limitaciones
 
-- No ejecuté tests ni build (Editor abierto con el proyecto bloqueado).
+- Los tests y el build WebGL se corrieron después, en la auditoría: ver `docs/AUDITORIA.md`.
 - El ancho del contorno depende de `UNITY_MATRIX_P._m11`; está con `abs()` por el volteo de Y al
   renderizar a textura. Verificado en Editor (D3D11); en WebGL debería ser igual, pero no lo vi.
 - La Game view quedó con resolución fija 695x391 (la usé para capturar); volver a "Free Aspect"
